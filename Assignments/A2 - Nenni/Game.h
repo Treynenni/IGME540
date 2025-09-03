@@ -2,6 +2,7 @@
 
 #include <d3d11.h>
 #include <wrl/client.h>
+#include <DirectXMath.h>
 
 class Game
 {
@@ -30,11 +31,16 @@ private:
 	void ShowUIWindow();
 
 	//Variables for UI manipulation
-	float color[4];
+	float background[4];
 	bool showDemo;
 
 	//Inverts all colors
 	void InvertColor();
+
+	//Colors for triangle
+	float color1[4];
+	float color2[4];
+	float color3[4];
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the

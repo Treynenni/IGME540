@@ -27,10 +27,10 @@ using namespace DirectX;
 Game::Game()
 {
 	// Initializes Variables
-	color[0] = 0.4f;
-	color[1] = 0.6f;
-	color[2] = 0.75f;
-	color[3] = 0.0f;
+	background[0] = 0.4f;
+	background[1] = 0.6f;
+	background[2] = 0.75f;
+	background[3] = 0.0f;
 	showDemo = false;
 
 	// Helper methods for loading shaders, creating some basic
@@ -166,11 +166,9 @@ void Game::LoadShaders()
 // --------------------------------------------------------
 void Game::CreateGeometry()
 {
-	// Create some temporary variables to represent colors
-	// - Not necessary, just makes things more readable
-	XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	XMFLOAT4 green = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
-	XMFLOAT4 blue = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+	XMFLOAT4 shapeColor1 = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+	XMFLOAT4 shapeColor2 = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+	XMFLOAT4 shapeColor3 = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
 
 	// Set up the vertices of the triangle we would like to draw
 	// - We're going to copy this array, exactly as it exists in CPU memory
@@ -186,9 +184,9 @@ void Game::CreateGeometry()
 	//    since we're describing the triangle in terms of the window itself
 	Vertex vertices[] =
 	{
-		{ XMFLOAT3(+0.0f, +0.5f, +0.0f), red },
-		{ XMFLOAT3(+0.5f, -0.5f, +0.0f), blue },
-		{ XMFLOAT3(-0.5f, -0.5f, +0.0f), green },
+		{ XMFLOAT3(+0.0f, +0.5f, +0.0f), shapeColor1},
+		{ XMFLOAT3(+0.5f, -0.5f, +0.0f), shapeColor2},
+		{ XMFLOAT3(-0.5f, -0.5f, +0.0f), shapeColor3},
 	};
 
 	// Set up indices, which tell us which vertices to use and in which order
@@ -286,7 +284,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - At the beginning of Game::Draw() before drawing *anything*
 	{
 		// Clear the back buffer (erase what's on screen) and depth buffer
-		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	color);
+		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	background);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
@@ -377,7 +375,7 @@ void Game::ShowUIWindow() {
 	// Outputs resolution to window
 	ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
 
-	ImGui::ColorEdit4("Background Color Editor", color);
+	ImGui::ColorEdit4("Background Color Editor", background);
 
 	if (showDemo) {
 		if (ImGui::Button("Hide ImGui Demo Window")) 
@@ -402,8 +400,11 @@ void Game::ShowUIWindow() {
 
 void Game::InvertColor() {
 	
-	color[0] = 1 - color[0];
-	color[1] = 1 - color[1];
-	color[2] = 1 - color[2];
-}
+	background[0] = 1 - background[0];
+	background[1] = 1 - background[1];
+	background[2] = 1 - background[2];
 
+	for (int i = 0; i < 3; i++) {
+		
+	}
+}
