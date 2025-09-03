@@ -23,6 +23,19 @@ private:
 	void LoadShaders();
 	void CreateGeometry();
 
+	//Refreshes ImGui 
+	void ResetUI(float deltaTime);
+
+	//Builds UI
+	void ShowUIWindow();
+
+	//Variables for UI manipulation
+	float color[4];
+	bool showDemo;
+
+	//Inverts all colors
+	void InvertColor();
+
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
 	//     Component Object Model, which DirectX objects do

@@ -7,6 +7,12 @@
 
 #include <DirectXMath.h>
 
+// This code assumes files are in "ImGui" subfolder!
+// Adjust as necessary for your own folder structure and project setup
+#include "ImGui/imgui.h"
+#include "ImGui/imgui_impl_dx11.h"
+#include "ImGui/imgui_impl_win32.h"
+
 // Needed for a helper function to load pre-compiled shader files
 #pragma comment(lib, "d3dcompiler.lib")
 #include <d3dcompiler.h>
@@ -20,6 +26,13 @@ using namespace DirectX;
 // --------------------------------------------------------
 Game::Game()
 {
+	// Initializes Variables
+	color[0] = 0.4f;
+	color[1] = 0.6f;
+	color[2] = 0.75f;
+	color[3] = 0.0f;
+	showDemo = false;
+
 	// Helper methods for loading shaders, creating some basic
 	// geometry to draw and some simple camera matrices.
 	//  - You'll be expanding and/or replacing these later
@@ -46,6 +59,18 @@ Game::Game()
 		//    these calls will need to happen multiple times per frame
 		Graphics::Context->VSSetShader(vertexShader.Get(), 0, 0);
 		Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
+
+		// Initialize ImGui itself & platform/renderer backends
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGui_ImplWin32_Init(Window::Handle());
+		ImGui_ImplDX11_Init(Graphics::Device.Get(), Graphics::Context.Get());
+
+		// Pick a style (uncomment one of these 3)
+		ImGui::StyleColorsDark();
+		//ImGui::StyleColorsLight();
+		//ImGui::StyleColorsClassic();
+
 	}
 }
 
@@ -58,7 +83,10 @@ Game::Game()
 // --------------------------------------------------------
 Game::~Game()
 {
-
+	// ImGui clean up
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 }
 
 
@@ -241,6 +269,7 @@ void Game::OnResize()
 // --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
+	Game::ResetUI(deltaTime);
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
@@ -257,7 +286,6 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - At the beginning of Game::Draw() before drawing *anything*
 	{
 		// Clear the back buffer (erase what's on screen) and depth buffer
-		const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	color);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
@@ -288,6 +316,9 @@ void Game::Draw(float deltaTime, float totalTime)
 			0);    // Offset to add to each index when looking up vertices
 	}
 
+	ImGui::Render(); // Turns this frame’s UI into renderable triangles
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
+
 	// Frame END
 	// - These should happen exactly ONCE PER FRAME
 	// - At the very end of the frame (after drawing *everything*)
@@ -306,5 +337,73 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 }
 
+// --------------------------------------------------------
+// Refreshed UI every frame
+// --------------------------------------------------------
+void Game::ResetUI(float deltaTime) 
+{
+	// Feed fresh data to ImGui
+	ImGuiIO & io = ImGui::GetIO();
+	io.DeltaTime = deltaTime;
+	io.DisplaySize.x = (float)Window::Width();
+	io.DisplaySize.y = (float)Window::Height();
 
+	// Reset the frame
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	// Determine new input capture
+	Input::SetKeyboardCapture(io.WantCaptureKeyboard);
+	Input::SetMouseCapture(io.WantCaptureMouse);
+
+	//Show custom window
+	Game::ShowUIWindow();
+
+	if (showDemo) 
+	{
+		// Show the demo window
+		ImGui::ShowDemoWindow();
+	}	
+}
+
+void Game::ShowUIWindow() {
+
+	ImGui::Begin("Welcome!"); // Everything after is part of the window
+
+	// Outputs framerate to window
+	ImGui::Text("Current Framerate: %f", ImGui::GetIO().Framerate);
+
+	// Outputs resolution to window
+	ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
+
+	ImGui::ColorEdit4("Background Color Editor", color);
+
+	if (showDemo) {
+		if (ImGui::Button("Hide ImGui Demo Window")) 
+		{
+			showDemo = !showDemo;
+		}
+	}
+	else
+	{
+		if (ImGui::Button("Show ImGui Demo Window")) 
+		{
+			showDemo = !showDemo;
+		}
+	}
+
+	if (ImGui::Button("Invert Colors")) {
+		InvertColor();
+	}
+
+	ImGui::End(); // Ends the current window
+}
+
+void Game::InvertColor() {
+	
+	color[0] = 1 - color[0];
+	color[1] = 1 - color[1];
+	color[2] = 1 - color[2];
+}
 

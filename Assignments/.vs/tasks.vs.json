@@ -1,0 +1,10 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskLabel": "task-NewFolder",
+      "appliesTo": "A2 - Nenni/NewFolder/",
+      "type": "launch"
+    }
+  ]
+}
