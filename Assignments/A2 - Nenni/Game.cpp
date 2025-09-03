@@ -6,6 +6,7 @@
 #include "Window.h"
 
 #include <DirectXMath.h>
+#include <string>
 
 // This code assumes files are in "ImGui" subfolder!
 // Adjust as necessary for your own folder structure and project setup
@@ -31,6 +32,7 @@ Game::Game()
 	background[1] = 0.6f;
 	background[2] = 0.75f;
 	background[3] = 0.0f;
+
 	showDemo = false;
 
 	// Helper methods for loading shaders, creating some basic
@@ -166,9 +168,9 @@ void Game::LoadShaders()
 // --------------------------------------------------------
 void Game::CreateGeometry()
 {
-	XMFLOAT4 shapeColor1 = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	XMFLOAT4 shapeColor2 = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
-	XMFLOAT4 shapeColor3 = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+	XMFLOAT4 c1 = XMFLOAT4(color1);
+	XMFLOAT4 c2 = XMFLOAT4(color2);
+	XMFLOAT4 c3 = XMFLOAT4(color3);
 
 	// Set up the vertices of the triangle we would like to draw
 	// - We're going to copy this array, exactly as it exists in CPU memory
@@ -184,9 +186,9 @@ void Game::CreateGeometry()
 	//    since we're describing the triangle in terms of the window itself
 	Vertex vertices[] =
 	{
-		{ XMFLOAT3(+0.0f, +0.5f, +0.0f), shapeColor1},
-		{ XMFLOAT3(+0.5f, -0.5f, +0.0f), shapeColor2},
-		{ XMFLOAT3(-0.5f, -0.5f, +0.0f), shapeColor3},
+		{ XMFLOAT3(+0.0f, +0.5f, +0.0f), c1},
+		{ XMFLOAT3(+0.5f, -0.5f, +0.0f), c2},
+		{ XMFLOAT3(-0.5f, -0.5f, +0.0f), c3},
 	};
 
 	// Set up indices, which tell us which vertices to use and in which order
@@ -365,18 +367,34 @@ void Game::ResetUI(float deltaTime)
 	}	
 }
 
+// --------------------------------------------------------
+// Shows and builds custom UI
+// --------------------------------------------------------
 void Game::ShowUIWindow() {
 
-	ImGui::Begin("Welcome!"); // Everything after is part of the window
-
+	std::string intro = "Welcome! Type in the box and I will change!##";
+	
+	//Decides which text to show
+	if (!str[0])
+	{
+		ImGui::Begin(&intro[0]);
+	}
+	else 
+	{
+		std::string name = "Wow! Your name is '" + str + "'. Nice name!##";
+		ImGui::Begin(&name[0]); 
+	}
+	
 	// Outputs framerate to window
 	ImGui::Text("Current Framerate: %f", ImGui::GetIO().Framerate);
 
 	// Outputs resolution to window
 	ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
 
+	// Edit background color
 	ImGui::ColorEdit4("Background Color Editor", background);
 
+	// Changes button based on if demo is hidden or not
 	if (showDemo) {
 		if (ImGui::Button("Hide ImGui Demo Window")) 
 		{
@@ -391,13 +409,33 @@ void Game::ShowUIWindow() {
 		}
 	}
 
-	if (ImGui::Button("Invert Colors")) {
+	// inverts colors
+	if (ImGui::Button("Invert Colors")) 
+	{
 		InvertColor();
 	}
+
+	// input text, will add it to window name
+	ImGui::Text("What's your name?");
+
+	ImGui::InputText(" ", &input[0], 100);
+	if (ImGui::Button("Submit Name")) 
+	{
+		str = "";
+		str.insert(0, &input[0]);
+		input = "";
+	}
+
+	ImGui::Text("Nested Table:");
+
+	AddTable();
 
 	ImGui::End(); // Ends the current window
 }
 
+// --------------------------------------------------------
+// Inverts color of background, triangle and text
+// --------------------------------------------------------
 void Game::InvertColor() {
 	
 	background[0] = 1 - background[0];
@@ -405,6 +443,83 @@ void Game::InvertColor() {
 	background[2] = 1 - background[2];
 
 	for (int i = 0; i < 3; i++) {
-		
+		color1[i] = 1 - color1[i];
+		color2[i] = 1 - color2[i];
+		color3[i] = 1 - color3[i];
+	}
+
+	indexBuffer.ReleaseAndGetAddressOf();
+	vertexBuffer.ReleaseAndGetAddressOf();
+
+	Game::CreateGeometry();
+}
+
+void Game::AddTable() {
+	if (ImGui::TreeNode("Your List"))
+	{
+		if (ImGui::BeginTable("table_nested1", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable))
+		{
+			ImGui::TableSetupColumn("Food");
+			ImGui::TableSetupColumn("Non-Food");
+			ImGui::TableHeadersRow();
+
+			ImGui::TableNextColumn();
+			ImGui::PushID(0);
+			ImGui::InputText("", &a00[0], 100);
+			ImGui::PopID();
+			{
+				float rows_height = 10 * 2;
+				if (ImGui::BeginTable("table_nested2", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable))
+				{
+					ImGui::TableSetupColumn("Refridgerated");
+					ImGui::TableSetupColumn("Non-Refridgerated");
+					ImGui::TableHeadersRow();
+
+					ImGui::TableNextRow(ImGuiTableRowFlags_None, rows_height);
+					
+					ImGui::TableNextColumn();
+					ImGui::PushID(1);
+					ImGui::InputText("", &b00[0], 100);
+					ImGui::PopID();
+
+					ImGui::TableNextColumn();
+					ImGui::PushID(2);
+					ImGui::InputText("", &b10[0], 100);
+					ImGui::PopID();
+
+					ImGui::TableNextRow(ImGuiTableRowFlags_None, rows_height);
+					
+					ImGui::TableNextColumn();
+					ImGui::PushID(3);
+					ImGui::InputText("", &b01[0], 100);
+					ImGui::PopID();
+
+					ImGui::TableNextColumn();
+					ImGui::PushID(4);
+					ImGui::InputText("", &b11[0], 100);
+					ImGui::PopID();
+
+					ImGui::EndTable();
+				}
+			}
+			ImGui::TableNextColumn();
+
+			ImGui::PushID(5);
+			ImGui::InputText("", &a10[0], 100);
+			ImGui::PopID();
+
+			ImGui::TableNextColumn();
+			ImGui::PushID(6);
+			ImGui::InputText("", &a01[0], 100);
+			ImGui::PopID();
+
+			ImGui::TableNextColumn(); 
+			ImGui::PushID(7);
+			ImGui::InputText("", &a11[0], 100);
+			ImGui::PopID();
+
+			ImGui::EndTable();
+		}
+		ImGui::TreePop();
 	}
 }
