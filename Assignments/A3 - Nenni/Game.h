@@ -4,6 +4,8 @@
 #include <wrl/client.h>
 #include <DirectXMath.h>
 #include <string>
+#include <memory>
+#include "Mesh.h"
 
 class Game
 {
@@ -25,30 +27,37 @@ private:
 	void LoadShaders();
 	void CreateGeometry();
 
-	//Refreshes ImGui 
+	// Refreshes ImGui 
 	void ResetUI(float deltaTime);
 
-	//Builds UI
+	// Builds UI
 	void ShowUIWindow();
 
-	//Variables for UI manipulation
+	// Inverts all colors
+	void InvertColor();
+
+	// Adds table to UI
+	void AddTable();
+
+	// List of Meshes
+	std::shared_ptr<Mesh> shapes[3];
+
+	// Variables for UI manipulation
 	float background[4];
 	bool showDemo;
 	bool table;
 
-	//Inverts all colors
-	void InvertColor();
-
-	//Colors for triangle
+	// Colors for triangle
 	float color1[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
 	float color2[4] = { 0.0f, 1.0f, 0.0f, 1.0f };
 	float color3[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
+	float color4[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-	//Strings for user input
+	// Strings for user input
 	std::string str;
 	std::string input;
 
-	//Strings for table
+	// Strings for table
 
 	std::string a00 = "Cake";
 
@@ -61,9 +70,6 @@ private:
 
 	std::string a10 = "Paper Towels";
 	std::string a11 = "Shampoo";
-
-	//Adds table to UI
-	void AddTable();
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
