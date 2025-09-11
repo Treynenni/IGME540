@@ -10,7 +10,7 @@ class Mesh
 public:
 	
 	// Constructor/Destructor
-	Mesh(unsigned int* indices, Vertex* vertices);
+	Mesh(unsigned int* indices, Vertex* vertices, int iCount, int vCount);
 	~Mesh();
 
 	// Getter Methods
@@ -21,6 +21,7 @@ public:
 
 	void Draw();
 
+
 private:
 
 	// Buffers to hold gameplay data
@@ -29,5 +30,6 @@ private:
 
 	int indexCount;
 	int vertexCount;
+
 };
 

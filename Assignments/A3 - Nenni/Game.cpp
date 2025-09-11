@@ -5,9 +5,6 @@
 #include "PathHelpers.h"
 #include "Window.h"
 
-#include <DirectXMath.h>
-#include <string>
-
 // This code assumes files are in "ImGui" subfolder!
 // Adjust as necessary for your own folder structure and project setup
 #include "ImGui/imgui.h"
@@ -177,28 +174,33 @@ void Game::CreateGeometry()
 
 	Vertex squareVertices[] = 
 	{
-		{ XMFLOAT3(+0.8f, +0.8f, +0.0f), XMFLOAT4(color1)},
-		{ XMFLOAT3(+0.6f, +0.8f, +0.0f), XMFLOAT4(color2)},
-		{ XMFLOAT3(+0.6f, +0.6f, +0.0f), XMFLOAT4(color3)},
-		{ XMFLOAT3(+0.8f, +0.6f, +0.0f), XMFLOAT4(color4)},
+		{ XMFLOAT3(+0.5f, +0.8f, +0.0f), XMFLOAT4(color4)},
+		{ XMFLOAT3(+0.8f, +0.8f, +0.0f), XMFLOAT4(color4)},
+		{ XMFLOAT3(+0.8f, +0.5f, +0.0f), XMFLOAT4(color4)},
+		{ XMFLOAT3(+0.5f, +0.5f, +0.0f), XMFLOAT4(color4)},
 	};
 
 	Vertex polygonVertices[] = {
-		{ XMFLOAT3(+0.0f, +0.5f, +0.0f), XMFLOAT4(color1)},
-		{ XMFLOAT3(+0.5f, -0.5f, +0.0f), XMFLOAT4(color2)},
-		{ XMFLOAT3(-0.5f, -0.5f, +0.0f), XMFLOAT4(color3)},
-		{ XMFLOAT3(-0.5f, -0.5f, +0.0f), XMFLOAT4(color4)},
+		{ XMFLOAT3(-0.7f, +0.95f, +0.0f), XMFLOAT4(color1)},
+		{ XMFLOAT3(-0.65f, +0.7f, +0.0f), XMFLOAT4(color1)},
+		{ XMFLOAT3(-0.8f, +0.5f, +0.0f), XMFLOAT4(color1)},
+		{ XMFLOAT3(-0.85f, +0.775f, +0.0f), XMFLOAT4(color1)},
+		{ XMFLOAT3(-0.55f, +0.775f, +0.0f), XMFLOAT4(color1)},
+		{ XMFLOAT3(-0.7f, +0.65f, +0.0f), XMFLOAT4(color1)},
+		{ XMFLOAT3(-0.6f, +0.5f, +0.0f), XMFLOAT4(color1)},
+		{ XMFLOAT3(-0.75f, +0.7f, +0.0f), XMFLOAT4(color1)},
+
 	};
 
 	unsigned int triangleIndices[] = { 0, 1, 2 };
 
-	unsigned int squareIndices[] = { 0, 1, 2, 3 };
+	unsigned int squareIndices[] = { 0, 1, 2, 0, 2, 3};
 
-	unsigned int polygonIndices[] = { 0, 1, 2, 3 };
+	unsigned int polygonIndices[] = { 0, 1, 2, 3, 4, 5, 0, 6, 7};
 
-	shapes[0] = std::make_shared<Mesh>(triangleIndices, triangleVertices);
-	shapes[1] = std::make_shared<Mesh>(squareIndices, squareVertices);
-	shapes[2] = std::make_shared<Mesh>(polygonIndices, polygonVertices);
+	shapes[0] = std::make_shared<Mesh>(triangleIndices, triangleVertices, 3, 3);
+	shapes[1] = std::make_shared<Mesh>(squareIndices, squareVertices, 6, 4);
+	shapes[2] = std::make_shared<Mesh>(polygonIndices, polygonVertices, 9, 8);
 }
 
 
@@ -238,12 +240,9 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
-	//PUT CODE TO DRAW MESHES
-	///
-	///
-	/// 
-	/// 
-	/// 
+	(*shapes[0]).Draw();
+	(*shapes[1]).Draw();
+	(*shapes[2]).Draw();
 
 	ImGui::Render(); // Turns this frame’s UI into renderable triangles
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
@@ -288,12 +287,6 @@ void Game::ResetUI(float deltaTime)
 
 	//Show custom window
 	Game::ShowUIWindow();
-
-	if (showDemo) 
-	{
-		// Show the demo window
-		ImGui::ShowDemoWindow();
-	}	
 }
 
 // --------------------------------------------------------
@@ -301,19 +294,8 @@ void Game::ResetUI(float deltaTime)
 // --------------------------------------------------------
 void Game::ShowUIWindow() {
 
-	std::string intro = "Welcome! Type in the box and I will change!##";
-	
-	//Decides which text to show
-	if (!str[0])
-	{
-		ImGui::Begin(&intro[0]);
-	}
-	else 
-	{
-		std::string name = "Wow! Your name is '" + str + "'. Nice name!##";
-		ImGui::Begin(&name[0]); 
-	}
-	
+	ImGui::Begin("Welcome!");
+
 	// Outputs framerate to window
 	ImGui::Text("Current Framerate: %f", ImGui::GetIO().Framerate);
 
@@ -323,41 +305,13 @@ void Game::ShowUIWindow() {
 	// Edit background color
 	ImGui::ColorEdit4("Background Color Editor", background);
 
-	// Changes button based on if demo is hidden or not
-	if (showDemo) {
-		if (ImGui::Button("Hide ImGui Demo Window")) 
-		{
-			showDemo = !showDemo;
-		}
-	}
-	else
-	{
-		if (ImGui::Button("Show ImGui Demo Window")) 
-		{
-			showDemo = !showDemo;
-		}
-	}
-
 	// inverts colors
 	if (ImGui::Button("Invert Colors")) 
 	{
 		InvertColor();
 	}
 
-	// input text, will add it to window name
-	ImGui::Text("What's your name?");
-
-	ImGui::InputText(" ", &input[0], 100);
-	if (ImGui::Button("Submit Name")) 
-	{
-		str = "";
-		str.insert(0, &input[0]);
-		input = "";
-	}
-
-	ImGui::Text("Nested Table:");
-
-	AddTable();
+	ShowStats();
 
 	ImGui::End(); // Ends the current window
 }
@@ -375,80 +329,40 @@ void Game::InvertColor() {
 		color1[i] = 1 - color1[i];
 		color2[i] = 1 - color2[i];
 		color3[i] = 1 - color3[i];
+		color4[i] = 1 - color4[i];
 	}
-
-	//indexBuffer.ReleaseAndGetAddressOf();
-	//vertexBuffer.ReleaseAndGetAddressOf();
 
 	Game::CreateGeometry();
 }
 
-void Game::AddTable() {
-	if (ImGui::TreeNode("Your List"))
+// --------------------------------------------------------
+// Creates subsection for shape statistics
+// --------------------------------------------------------
+void Game::ShowStats() {
+	if (ImGui::TreeNode("Triangle"))
 	{
-		if (ImGui::BeginTable("table_nested1", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable))
-		{
-			ImGui::TableSetupColumn("Food");
-			ImGui::TableSetupColumn("Non-Food");
-			ImGui::TableHeadersRow();
+		ImGui::Text("Triangles: %d", (*shapes[0]).GetIndexCount() / 3);
+		ImGui::Text("Vertices: %d", (*shapes[0]).GetVertexCount());
+		ImGui::Text("Indices: %d", (*shapes[0]).GetIndexCount());
 
-			ImGui::TableNextColumn();
-			ImGui::PushID(0);
-			ImGui::InputText("", &a00[0], 100);
-			ImGui::PopID();
-			{
-				float rows_height = 10 * 2;
-				if (ImGui::BeginTable("table_nested2", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable))
-				{
-					ImGui::TableSetupColumn("Refridgerated");
-					ImGui::TableSetupColumn("Non-Refridgerated");
-					ImGui::TableHeadersRow();
+		ImGui::TreePop();
+	}
 
-					ImGui::TableNextRow(ImGuiTableRowFlags_None, rows_height);
-					
-					ImGui::TableNextColumn();
-					ImGui::PushID(1);
-					ImGui::InputText("", &b00[0], 100);
-					ImGui::PopID();
+	if (ImGui::TreeNode("Rectangle"))
+	{
+		ImGui::Text("Triangles: %d", (*shapes[1]).GetIndexCount() / 3);
+		ImGui::Text("Vertices: %d", (*shapes[1]).GetVertexCount());
+		ImGui::Text("Indices: %d", (*shapes[1]).GetIndexCount());
 
-					ImGui::TableNextColumn();
-					ImGui::PushID(2);
-					ImGui::InputText("", &b10[0], 100);
-					ImGui::PopID();
+		ImGui::TreePop();
+	}
 
-					ImGui::TableNextRow(ImGuiTableRowFlags_None, rows_height);
-					
-					ImGui::TableNextColumn();
-					ImGui::PushID(3);
-					ImGui::InputText("", &b01[0], 100);
-					ImGui::PopID();
+	if (ImGui::TreeNode("Star"))
+	{
+		ImGui::Text("Triangles: %d", (*shapes[2]).GetIndexCount() / 3);
+		ImGui::Text("Vertices: %d", (*shapes[2]).GetVertexCount());
+		ImGui::Text("Indices: %d", (*shapes[2]).GetIndexCount());
 
-					ImGui::TableNextColumn();
-					ImGui::PushID(4);
-					ImGui::InputText("", &b11[0], 100);
-					ImGui::PopID();
-
-					ImGui::EndTable();
-				}
-			}
-			ImGui::TableNextColumn();
-
-			ImGui::PushID(5);
-			ImGui::InputText("", &a10[0], 100);
-			ImGui::PopID();
-
-			ImGui::TableNextColumn();
-			ImGui::PushID(6);
-			ImGui::InputText("", &a01[0], 100);
-			ImGui::PopID();
-
-			ImGui::TableNextColumn(); 
-			ImGui::PushID(7);
-			ImGui::InputText("", &a11[0], 100);
-			ImGui::PopID();
-
-			ImGui::EndTable();
-		}
 		ImGui::TreePop();
 	}
 }

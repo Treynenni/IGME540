@@ -3,7 +3,6 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <DirectXMath.h>
-#include <string>
 #include <memory>
 #include "Mesh.h"
 
@@ -37,7 +36,7 @@ private:
 	void InvertColor();
 
 	// Adds table to UI
-	void AddTable();
+	void ShowStats();
 
 	// List of Meshes
 	std::shared_ptr<Mesh> shapes[3];
@@ -52,24 +51,6 @@ private:
 	float color2[4] = { 0.0f, 1.0f, 0.0f, 1.0f };
 	float color3[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
 	float color4[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-
-	// Strings for user input
-	std::string str;
-	std::string input;
-
-	// Strings for table
-
-	std::string a00 = "Cake";
-
-	std::string b00 = "Eggs";
-	std::string b10 = "Sugar";
-	std::string b01 = "Milk";
-	std::string b11 = "Flour";
-
-	std::string a01 = "Chips";
-
-	std::string a10 = "Paper Towels";
-	std::string a11 = "Shampoo";
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
