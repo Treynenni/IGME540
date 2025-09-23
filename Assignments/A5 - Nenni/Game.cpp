@@ -5,8 +5,6 @@
 #include "PathHelpers.h"
 #include "Window.h"
 
-#include <DirectXMath.h>
-#include <string>
 
 // This code assumes files are in "ImGui" subfolder!
 // Adjust as necessary for your own folder structure and project setup
@@ -21,6 +19,8 @@
 // For the DirectX Math library
 using namespace DirectX;
 
+
+
 // --------------------------------------------------------
 // The constructor is called after the window and graphics API
 // are initialized but before the game loop begins
@@ -33,7 +33,21 @@ Game::Game()
 	background[2] = 0.75f;
 	background[3] = 0.0f;
 
-	showDemo = false;
+	constBuffData.colorTint = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	constBuffData.offset = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+	// Describe the constant buffer
+	D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.ByteWidth = (sizeof(BufferStructs) + 15) / 16 * 16; // Must be a multiple of 16
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	Graphics::Device->CreateBuffer(&cbDesc, 0, constBuffer.GetAddressOf());
+
+	Graphics::Context->VSSetConstantBuffers(
+		0, // Which slot (register) to bind the buffer to?
+		1, // How many are we setting right now?
+		constBuffer.GetAddressOf()); // Array of buffers (or address of just one)
 
 	// Helper methods for loading shaders, creating some basic
 	// geometry to draw and some simple camera matrices.
@@ -168,89 +182,42 @@ void Game::LoadShaders()
 // --------------------------------------------------------
 void Game::CreateGeometry()
 {
-	XMFLOAT4 c1 = XMFLOAT4(color1);
-	XMFLOAT4 c2 = XMFLOAT4(color2);
-	XMFLOAT4 c3 = XMFLOAT4(color3);
-
-	// Set up the vertices of the triangle we would like to draw
-	// - We're going to copy this array, exactly as it exists in CPU memory
-	//    over to a Direct3D-controlled data structure on the GPU (the vertex buffer)
-	// - Note: Since we don't have a camera or really any concept of
-	//    a "3d world" yet, we're simply describing positions within the
-	//    bounds of how the rasterizer sees our screen: [-1 to +1] on X and Y
-	// - This means (0,0) is at the very center of the screen.
-	// - These are known as "Normalized Device Coordinates" or "Homogeneous 
-	//    Screen Coords", which are ways to describe a position without
-	//    knowing the exact size (in pixels) of the image/window/etc.  
-	// - Long story short: Resizing the window also resizes the triangle,
-	//    since we're describing the triangle in terms of the window itself
-	Vertex vertices[] =
+	Vertex triangleVertices[] =
 	{
-		{ XMFLOAT3(+0.0f, +0.5f, +0.0f), c1},
-		{ XMFLOAT3(+0.5f, -0.5f, +0.0f), c2},
-		{ XMFLOAT3(-0.5f, -0.5f, +0.0f), c3},
+		{ XMFLOAT3(+0.0f, +0.5f, +0.0f), XMFLOAT4(color1)},
+		{ XMFLOAT3(+0.5f, -0.5f, +0.0f), XMFLOAT4(color2)},
+		{ XMFLOAT3(-0.5f, -0.5f, +0.0f), XMFLOAT4(color3)},
 	};
 
-	// Set up indices, which tell us which vertices to use and in which order
-	// - This is redundant for just 3 vertices, but will be more useful later
-	// - Indices are technically not required if the vertices are in the buffer 
-	//    in the correct order and each one will be used exactly once
-	// - But just to see how it's done...
-	unsigned int indices[] = { 0, 1, 2 };
-
-
-	// Create a VERTEX BUFFER
-	// - This holds the vertex data of triangles for a single object
-	// - This buffer is created on the GPU, which is where the data needs to
-	//    be if we want the GPU to act on it (as in: draw it to the screen)
+	Vertex squareVertices[] = 
 	{
-		// First, we need to describe the buffer we want Direct3D to make on the GPU
-		//  - Note that this variable is created on the stack since we only need it once
-		//  - After the buffer is created, this description variable is unnecessary
-		D3D11_BUFFER_DESC vbd = {};
-		vbd.Usage = D3D11_USAGE_IMMUTABLE;	// Will NEVER change
-		vbd.ByteWidth = sizeof(Vertex) * 3;       // 3 = number of vertices in the buffer
-		vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER; // Tells Direct3D this is a vertex buffer
-		vbd.CPUAccessFlags = 0;	// Note: We cannot access the data from C++ (this is good)
-		vbd.MiscFlags = 0;
-		vbd.StructureByteStride = 0;
+		{ XMFLOAT3(+0.5f, +0.8f, +0.0f), XMFLOAT4(color2)},
+		{ XMFLOAT3(+0.8f, +0.8f, +0.0f), XMFLOAT4(color4)},
+		{ XMFLOAT3(+0.8f, +0.5f, +0.0f), XMFLOAT4(color2)},
+		{ XMFLOAT3(+0.5f, +0.5f, +0.0f), XMFLOAT4(color4)},
+	};
 
-		// Create the proper struct to hold the initial vertex data
-		// - This is how we initially fill the buffer with data
-		// - Essentially, we're specifying a pointer to the data to copy
-		D3D11_SUBRESOURCE_DATA initialVertexData = {};
-		initialVertexData.pSysMem = vertices; // pSysMem = Pointer to System Memory
+	Vertex polygonVertices[] = {
+		{ XMFLOAT3(-0.7f, +0.95f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(-0.65f, +0.7f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(-0.8f, +0.5f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(-0.85f, +0.775f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(-0.55f, +0.775f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(-0.7f, +0.65f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(-0.6f, +0.5f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(-0.75f, +0.7f, +0.0f), XMFLOAT4(color3)},
 
-		// Actually create the buffer on the GPU with the initial data
-		// - Once we do this, we'll NEVER CHANGE DATA IN THE BUFFER AGAIN
-		Graphics::Device->CreateBuffer(&vbd, &initialVertexData, vertexBuffer.GetAddressOf());
-	}
+	};
 
-	// Create an INDEX BUFFER
-	// - This holds indices to elements in the vertex buffer
-	// - This is most useful when vertices are shared among neighboring triangles
-	// - This buffer is created on the GPU, which is where the data needs to
-	//    be if we want the GPU to act on it (as in: draw it to the screen)
-	{
-		// Describe the buffer, as we did above, with two major differences
-		//  - Byte Width (3 unsigned integers vs. 3 whole vertices)
-		//  - Bind Flag (used as an index buffer instead of a vertex buffer) 
-		D3D11_BUFFER_DESC ibd = {};
-		ibd.Usage = D3D11_USAGE_IMMUTABLE;	// Will NEVER change
-		ibd.ByteWidth = sizeof(unsigned int) * 3;	// 3 = number of indices in the buffer
-		ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;	// Tells Direct3D this is an index buffer
-		ibd.CPUAccessFlags = 0;	// Note: We cannot access the data from C++ (this is good)
-		ibd.MiscFlags = 0;
-		ibd.StructureByteStride = 0;
+	unsigned int triangleIndices[] = { 0, 1, 2 };
 
-		// Specify the initial data for this buffer, similar to above
-		D3D11_SUBRESOURCE_DATA initialIndexData = {};
-		initialIndexData.pSysMem = indices; // pSysMem = Pointer to System Memory
+	unsigned int squareIndices[] = { 0, 1, 2, 0, 2, 3};
 
-		// Actually create the buffer with the initial data
-		// - Once we do this, we'll NEVER CHANGE THE BUFFER AGAIN
-		Graphics::Device->CreateBuffer(&ibd, &initialIndexData, indexBuffer.GetAddressOf());
-	}
+	unsigned int polygonIndices[] = { 0, 1, 2, 3, 4, 5, 0, 6, 7};
+
+	shapes[0] = std::make_shared<Mesh>(triangleIndices, triangleVertices, 3, 3);
+	shapes[1] = std::make_shared<Mesh>(squareIndices, squareVertices, 6, 4);
+	shapes[2] = std::make_shared<Mesh>(polygonIndices, polygonVertices, 9, 8);
 }
 
 
@@ -285,36 +252,19 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - These things should happen ONCE PER FRAME
 	// - At the beginning of Game::Draw() before drawing *anything*
 	{
+		D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+		Graphics::Context->Map(constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+		memcpy(mappedBuffer.pData, &constBuffData, sizeof(constBuffData));
+		Graphics::Context->Unmap(constBuffer.Get(), 0);
+
 		// Clear the back buffer (erase what's on screen) and depth buffer
 		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	background);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
-	// DRAW geometry
-	// - These steps are generally repeated for EACH object you draw
-	// - Other Direct3D calls will also be necessary to do more complex things
-	{
-		// Set buffers in the input assembler (IA) stage
-		//  - Do this ONCE PER OBJECT, since each object may have different geometry
-		//  - For this demo, this step *could* simply be done once during Init()
-		//  - However, this needs to be done between EACH DrawIndexed() call
-		//     when drawing different geometry, so it's here as an example
-		UINT stride = sizeof(Vertex);
-		UINT offset = 0;
-		Graphics::Context->IASetVertexBuffers(0, 1, vertexBuffer.GetAddressOf(), &stride, &offset);
-		Graphics::Context->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-
-		// Tell Direct3D to draw
-		//  - Begins the rendering pipeline on the GPU
-		//  - Do this ONCE PER OBJECT you intend to draw
-		//  - This will use all currently set Direct3D resources (shaders, buffers, etc)
-		//  - DrawIndexed() uses the currently set INDEX BUFFER to look up corresponding
-		//     vertices in the currently set VERTEX BUFFER
-		Graphics::Context->DrawIndexed(
-			3,     // The number of indices to use (we could draw a subset if we wanted)
-			0,     // Offset to the first index we want to use
-			0);    // Offset to add to each index when looking up vertices
-	}
+	(*shapes[0]).Draw();
+	(*shapes[1]).Draw();
+	(*shapes[2]).Draw();
 
 	ImGui::Render(); // Turns this frame’s UI into renderable triangles
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
@@ -359,12 +309,6 @@ void Game::ResetUI(float deltaTime)
 
 	//Show custom window
 	Game::ShowUIWindow();
-
-	if (showDemo) 
-	{
-		// Show the demo window
-		ImGui::ShowDemoWindow();
-	}	
 }
 
 // --------------------------------------------------------
@@ -372,19 +316,8 @@ void Game::ResetUI(float deltaTime)
 // --------------------------------------------------------
 void Game::ShowUIWindow() {
 
-	std::string intro = "Welcome! Type in the box and I will change!##";
-	
-	//Decides which text to show
-	if (!str[0])
-	{
-		ImGui::Begin(&intro[0]);
-	}
-	else 
-	{
-		std::string name = "Wow! Your name is '" + str + "'. Nice name!##";
-		ImGui::Begin(&name[0]); 
-	}
-	
+	ImGui::Begin("Welcome!");
+
 	// Outputs framerate to window
 	ImGui::Text("Current Framerate: %f", ImGui::GetIO().Framerate);
 
@@ -394,43 +327,27 @@ void Game::ShowUIWindow() {
 	// Edit background color
 	ImGui::ColorEdit4("Background Color Editor", background);
 
-	// Changes button based on if demo is hidden or not
-	if (showDemo) {
-		if (ImGui::Button("Hide ImGui Demo Window")) 
-		{
-			showDemo = !showDemo;
-		}
-	}
-	else
-	{
-		if (ImGui::Button("Show ImGui Demo Window")) 
-		{
-			showDemo = !showDemo;
-		}
-	}
+	GraphicChangeUI();
 
-	// inverts colors
+	// inverts colors **Broken as of now
+	/*
 	if (ImGui::Button("Invert Colors")) 
 	{
 		InvertColor();
 	}
+	*/
 
-	// input text, will add it to window name
-	ImGui::Text("What's your name?");
-
-	ImGui::InputText(" ", &input[0], 100);
-	if (ImGui::Button("Submit Name")) 
-	{
-		str = "";
-		str.insert(0, &input[0]);
-		input = "";
-	}
-
-	ImGui::Text("Nested Table:");
-
-	AddTable();
+	ShowStats();
 
 	ImGui::End(); // Ends the current window
+}
+
+// --------------------------------------------------------
+// Creates Graphic Updating UI
+// --------------------------------------------------------
+void Game::GraphicChangeUI() {
+	ImGui::ColorEdit4("Vertex Tint Editor", &constBuffData.colorTint.x);
+	ImGui::SliderFloat3("Vertex Position Editor", &constBuffData.offset.x, -1.0f, 1.0f);
 }
 
 // --------------------------------------------------------
@@ -446,80 +363,40 @@ void Game::InvertColor() {
 		color1[i] = 1 - color1[i];
 		color2[i] = 1 - color2[i];
 		color3[i] = 1 - color3[i];
+		color4[i] = 1 - color4[i];
 	}
-
-	//indexBuffer.ReleaseAndGetAddressOf();
-	//vertexBuffer.ReleaseAndGetAddressOf();
 
 	Game::CreateGeometry();
 }
 
-void Game::AddTable() {
-	if (ImGui::TreeNode("Your List"))
+// --------------------------------------------------------
+// Creates subsection for shape statistics
+// --------------------------------------------------------
+void Game::ShowStats() {
+	if (ImGui::TreeNode("Triangle"))
 	{
-		if (ImGui::BeginTable("table_nested1", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable))
-		{
-			ImGui::TableSetupColumn("Food");
-			ImGui::TableSetupColumn("Non-Food");
-			ImGui::TableHeadersRow();
+		ImGui::Text("Triangles: %d", (*shapes[0]).GetIndexCount() / 3);
+		ImGui::Text("Vertices: %d", (*shapes[0]).GetVertexCount());
+		ImGui::Text("Indices: %d", (*shapes[0]).GetIndexCount());
 
-			ImGui::TableNextColumn();
-			ImGui::PushID(0);
-			ImGui::InputText("", &a00[0], 100);
-			ImGui::PopID();
-			{
-				float rows_height = 10 * 2;
-				if (ImGui::BeginTable("table_nested2", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable))
-				{
-					ImGui::TableSetupColumn("Refridgerated");
-					ImGui::TableSetupColumn("Non-Refridgerated");
-					ImGui::TableHeadersRow();
+		ImGui::TreePop();
+	}
 
-					ImGui::TableNextRow(ImGuiTableRowFlags_None, rows_height);
-					
-					ImGui::TableNextColumn();
-					ImGui::PushID(1);
-					ImGui::InputText("", &b00[0], 100);
-					ImGui::PopID();
+	if (ImGui::TreeNode("Rectangle"))
+	{
+		ImGui::Text("Triangles: %d", (*shapes[1]).GetIndexCount() / 3);
+		ImGui::Text("Vertices: %d", (*shapes[1]).GetVertexCount());
+		ImGui::Text("Indices: %d", (*shapes[1]).GetIndexCount());
 
-					ImGui::TableNextColumn();
-					ImGui::PushID(2);
-					ImGui::InputText("", &b10[0], 100);
-					ImGui::PopID();
+		ImGui::TreePop();
+	}
 
-					ImGui::TableNextRow(ImGuiTableRowFlags_None, rows_height);
-					
-					ImGui::TableNextColumn();
-					ImGui::PushID(3);
-					ImGui::InputText("", &b01[0], 100);
-					ImGui::PopID();
+	if (ImGui::TreeNode("Star"))
+	{
+		ImGui::Text("Triangles: %d", (*shapes[2]).GetIndexCount() / 3);
+		ImGui::Text("Vertices: %d", (*shapes[2]).GetVertexCount());
+		ImGui::Text("Indices: %d", (*shapes[2]).GetIndexCount());
 
-					ImGui::TableNextColumn();
-					ImGui::PushID(4);
-					ImGui::InputText("", &b11[0], 100);
-					ImGui::PopID();
-
-					ImGui::EndTable();
-				}
-			}
-			ImGui::TableNextColumn();
-
-			ImGui::PushID(5);
-			ImGui::InputText("", &a10[0], 100);
-			ImGui::PopID();
-
-			ImGui::TableNextColumn();
-			ImGui::PushID(6);
-			ImGui::InputText("", &a01[0], 100);
-			ImGui::PopID();
-
-			ImGui::TableNextColumn(); 
-			ImGui::PushID(7);
-			ImGui::InputText("", &a11[0], 100);
-			ImGui::PopID();
-
-			ImGui::EndTable();
-		}
 		ImGui::TreePop();
 	}
 }

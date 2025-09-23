@@ -174,9 +174,9 @@ void Game::CreateGeometry()
 
 	Vertex squareVertices[] = 
 	{
-		{ XMFLOAT3(+0.5f, +0.8f, +0.0f), XMFLOAT4(color4)},
+		{ XMFLOAT3(+0.5f, +0.8f, +0.0f), XMFLOAT4(color2)},
 		{ XMFLOAT3(+0.8f, +0.8f, +0.0f), XMFLOAT4(color4)},
-		{ XMFLOAT3(+0.8f, +0.5f, +0.0f), XMFLOAT4(color4)},
+		{ XMFLOAT3(+0.8f, +0.5f, +0.0f), XMFLOAT4(color2)},
 		{ XMFLOAT3(+0.5f, +0.5f, +0.0f), XMFLOAT4(color4)},
 	};
 
