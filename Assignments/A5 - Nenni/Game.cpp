@@ -262,9 +262,9 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
-	(*shapes[0]).Draw();
-	(*shapes[1]).Draw();
-	(*shapes[2]).Draw();
+	shapes[0]->Draw();
+	shapes[1]->Draw();
+	shapes[2]->Draw();
 
 	ImGui::Render(); // Turns this frame’s UI into renderable triangles
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
