@@ -375,6 +375,8 @@ void Game::ShowUIWindow() {
 
 	ShowStats();
 
+	TransformStats();
+
 	ImGui::End(); // Ends the current window
 }
 
@@ -408,30 +410,36 @@ void Game::InvertColor() {
 // --------------------------------------------------------
 // Creates subsection for shape statistics
 // --------------------------------------------------------
-void Game::ShowStats() {
-	if (ImGui::TreeNode("Triangle"))
+void Game::ShowStats() 
+{
+	if (ImGui::TreeNode("Meshes")) 
 	{
-		ImGui::Text("Triangles: %d", (*shapes[0]).GetIndexCount() / 3);
-		ImGui::Text("Vertices: %d", (*shapes[0]).GetVertexCount());
-		ImGui::Text("Indices: %d", (*shapes[0]).GetIndexCount());
+		if (ImGui::TreeNode("Triangle"))
+		{
+			ImGui::Text("Triangles: %d", shapes[0]->GetIndexCount() / 3);
+			ImGui::Text("Vertices: %d", shapes[0]->GetVertexCount());
+			ImGui::Text("Indices: %d", shapes[0]->GetIndexCount());
 
-		ImGui::TreePop();
-	}
+			ImGui::TreePop();
+		}
 
-	if (ImGui::TreeNode("Rectangle"))
-	{
-		ImGui::Text("Triangles: %d", (*shapes[1]).GetIndexCount() / 3);
-		ImGui::Text("Vertices: %d", (*shapes[1]).GetVertexCount());
-		ImGui::Text("Indices: %d", (*shapes[1]).GetIndexCount());
+		if (ImGui::TreeNode("Rectangle"))
+		{
+			ImGui::Text("Triangles: %d", shapes[1]->GetIndexCount() / 3);
+			ImGui::Text("Vertices: %d", shapes[1]->GetVertexCount());
+			ImGui::Text("Indices: %d", shapes[1]->GetIndexCount());
 
-		ImGui::TreePop();
-	}
+			ImGui::TreePop();
+		}
 
-	if (ImGui::TreeNode("Star"))
-	{
-		ImGui::Text("Triangles: %d", (*shapes[2]).GetIndexCount() / 3);
-		ImGui::Text("Vertices: %d", (*shapes[2]).GetVertexCount());
-		ImGui::Text("Indices: %d", (*shapes[2]).GetIndexCount());
+		if (ImGui::TreeNode("Star"))
+		{
+			ImGui::Text("Triangles: %d", shapes[2]->GetIndexCount() / 3);
+			ImGui::Text("Vertices: %d", shapes[2]->GetVertexCount());
+			ImGui::Text("Indices: %d", shapes[2]->GetIndexCount());
+
+			ImGui::TreePop();
+		}
 
 		ImGui::TreePop();
 	}
@@ -440,6 +448,33 @@ void Game::ShowStats() {
 // --------------------------------------------------------
 // Creates ability to transform entity using ImGui
 // --------------------------------------------------------
-void Game::TransformStats(Entity entity) {
-	
+void Game::TransformStats() 
+{	
+	int i = 0;
+	if (ImGui::TreeNode("Entities")) 
+	{
+		for (auto& ent : entities) 
+		{
+			ImGui::PushID(i);
+
+			XMFLOAT3& pos = ent->GetTransform()->GetPosition();
+			XMFLOAT3& rot = ent->GetTransform()->GetRotation();
+			XMFLOAT3& scale = ent->GetTransform()->GetScale();
+
+			if (ImGui::TreeNode(("Entity " + std::to_string(i)).c_str()))
+			{
+				ImGui::DragFloat3("Position", &pos.x, 0.0f, -1.0f, 1.0f);
+				ImGui::DragFloat3("Rotation", &rot.x, 0.0f, -1.0f, 1.0f);
+				ImGui::DragFloat3("Scale", &scale.x, 0.0f, 0.0f, 2.0f);
+				ImGui::Text("Mesh Index Count: %d", ent->GetMesh()->GetIndexCount());
+
+				ImGui::TreePop();
+			}
+
+			ImGui::PopID();
+			i++;
+		}
+
+		ImGui::TreePop();
+	}
 }

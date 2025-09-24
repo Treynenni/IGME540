@@ -55,17 +55,17 @@ void Transformation::SetScale(XMFLOAT3 newScale)
 	scale = newScale;
 }
 
-XMFLOAT3 Transformation::GetPosition()
+XMFLOAT3& Transformation::GetPosition()
 {
 	return position;
 }
 
-XMFLOAT3 Transformation::GetRotation()
+XMFLOAT3& Transformation::GetRotation()
 {
 	return rotation;
 }
 
-XMFLOAT3 Transformation::GetScale()
+XMFLOAT3& Transformation::GetScale()
 {
 	return scale;
 }

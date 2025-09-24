@@ -44,7 +44,7 @@ private:
 	// Adds table to UI
 	void ShowStats();
 
-	void TransformStats(Entity entity);
+	void TransformStats();
 
 	// Adds Graphic changing UI
 	void GraphicChangeUI();
