@@ -1,4 +1,5 @@
 #include "Mesh.h"
+#include "Entity.h"
 
 Mesh::Mesh(unsigned int* indices, Vertex* vertices, int iCount, int vCount) 
 {
@@ -65,7 +66,7 @@ Mesh::~Mesh()
 
 }
 
-void Mesh::Draw() 
+void Mesh::Draw()
 {
 	// DRAW geometry
 	// - These steps are generally repeated for EACH object you draw

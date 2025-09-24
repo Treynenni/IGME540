@@ -85,7 +85,7 @@ XMFLOAT4X4 Transformation::GetWorldInverseTransposeMatrix()
 }
 
 void Transformation::UpdateWorldMatrix() {
-	XMMATRIX worldMatrix = XMMatrixScaling(scale.x, scale.y, scale.z) * XMMatrixRotationRollPitchYaw(rotation.x, rotation.y, rotation.z) * XMMatrixTranslation(position.x, position.y, position.z);
+	XMMATRIX worldMatrix = XMMatrixScaling(scale.x, scale.y, scale.z) * XMMatrixRotationRollPitchYaw(rotation.z, rotation.x, rotation.y) * XMMatrixTranslation(position.x, position.y, position.z);
 	XMStoreFloat4x4(&world, worldMatrix);
 	XMStoreFloat4x4(&worldInverseTranspose, XMMatrixInverse(0, XMMatrixTranspose(worldMatrix)));
 }

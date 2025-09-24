@@ -18,6 +18,7 @@
 
 // For the DirectX Math library
 using namespace DirectX;
+using namespace std;
 
 
 
@@ -34,7 +35,6 @@ Game::Game()
 	background[3] = 0.0f;
 
 	constBuffData.colorTint = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	constBuffData.offset = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	// Describe the constant buffer
 	D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
@@ -54,6 +54,7 @@ Game::Game()
 	//  - You'll be expanding and/or replacing these later
 	LoadShaders();
 	CreateGeometry();
+	CreateEntities();
 
 	// Set initial graphics API state
 	//  - These settings persist until we change them
@@ -191,21 +192,22 @@ void Game::CreateGeometry()
 
 	Vertex squareVertices[] = 
 	{
-		{ XMFLOAT3(+0.5f, +0.8f, +0.0f), XMFLOAT4(color2)},
-		{ XMFLOAT3(+0.8f, +0.8f, +0.0f), XMFLOAT4(color4)},
-		{ XMFLOAT3(+0.8f, +0.5f, +0.0f), XMFLOAT4(color2)},
-		{ XMFLOAT3(+0.5f, +0.5f, +0.0f), XMFLOAT4(color4)},
+		{ XMFLOAT3(-0.20f, +0.2f, +0.0f), XMFLOAT4(color2)},
+		{ XMFLOAT3(+0.2f, +0.2f, +0.0f), XMFLOAT4(color4)},
+		{ XMFLOAT3(+0.2f, -0.2f, +0.0f), XMFLOAT4(color2)},
+		{ XMFLOAT3(-0.2f, -0.2f, +0.0f), XMFLOAT4(color4)},
 	};
 
+
 	Vertex polygonVertices[] = {
-		{ XMFLOAT3(-0.7f, +0.95f, +0.0f), XMFLOAT4(color3)},
-		{ XMFLOAT3(-0.65f, +0.7f, +0.0f), XMFLOAT4(color3)},
-		{ XMFLOAT3(-0.8f, +0.5f, +0.0f), XMFLOAT4(color3)},
-		{ XMFLOAT3(-0.85f, +0.775f, +0.0f), XMFLOAT4(color3)},
-		{ XMFLOAT3(-0.55f, +0.775f, +0.0f), XMFLOAT4(color3)},
-		{ XMFLOAT3(-0.7f, +0.65f, +0.0f), XMFLOAT4(color3)},
-		{ XMFLOAT3(-0.6f, +0.5f, +0.0f), XMFLOAT4(color3)},
-		{ XMFLOAT3(-0.75f, +0.7f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(0.0f, +0.25f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(0.05f, -0.0f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(-0.1f, -0.2f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(-0.15f, +0.075f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(0.15f, +0.075f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(0.0f, -0.05f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(0.1f, -0.2f, +0.0f), XMFLOAT4(color3)},
+		{ XMFLOAT3(-0.05f, -0.0f, +0.0f), XMFLOAT4(color3)},
 
 	};
 
@@ -215,9 +217,17 @@ void Game::CreateGeometry()
 
 	unsigned int polygonIndices[] = { 0, 1, 2, 3, 4, 5, 0, 6, 7};
 
-	shapes[0] = std::make_shared<Mesh>(triangleIndices, triangleVertices, 3, 3);
-	shapes[1] = std::make_shared<Mesh>(squareIndices, squareVertices, 6, 4);
-	shapes[2] = std::make_shared<Mesh>(polygonIndices, polygonVertices, 9, 8);
+	shapes[0] = make_shared<Mesh>(triangleIndices, triangleVertices, 3, 3);
+	shapes[1] = make_shared<Mesh>(squareIndices, squareVertices, 6, 4);
+	shapes[2] = make_shared<Mesh>(polygonIndices, polygonVertices, 9, 8);
+}
+
+void Game::CreateEntities() {
+	entities[0] = make_shared<Entity>(shapes[0]);
+	entities[1] = make_shared<Entity>(shapes[1]);
+	entities[2] = make_shared<Entity>(shapes[2]);
+	entities[3] = make_shared<Entity>(shapes[1]);
+	entities[4] = make_shared<Entity>(shapes[2]);
 }
 
 
@@ -237,6 +247,23 @@ void Game::OnResize()
 void Game::Update(float deltaTime, float totalTime)
 {
 	Game::ResetUI(deltaTime);
+
+	//Entity Scaling
+	entities[0]->GetTransform()->SetScale(abs(sin(totalTime)), abs(cos(totalTime)), 0);
+	entities[1]->GetTransform()->SetScale(abs(sin(totalTime)), abs(sin(totalTime)), 0);
+	entities[2]->GetTransform()->SetScale(1 - abs(sin(totalTime)), 1 - abs(sin(totalTime)), 0);
+
+	//Entity Rotations
+	entities[0]->GetTransform()->Rotation(0, 0.000005, 0);
+	entities[3]->GetTransform()->Rotation(0, 0.0001, 0);
+	entities[4]->GetTransform()->Rotation(0, -0.0001, 0);
+
+	//Entity Positions
+	entities[1]->GetTransform()->SetPosition(0.75, cos(totalTime), 0);
+	entities[2]->GetTransform()->SetPosition(-0.75, -cos(totalTime), 0);
+	entities[3]->GetTransform()->SetPosition(sin(totalTime), 0.75, 0);
+	entities[4]->GetTransform()->SetPosition(-sin(totalTime), -0.75, 0);
+
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
@@ -252,19 +279,28 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - These things should happen ONCE PER FRAME
 	// - At the beginning of Game::Draw() before drawing *anything*
 	{
-		D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-		Graphics::Context->Map(constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-		memcpy(mappedBuffer.pData, &constBuffData, sizeof(constBuffData));
-		Graphics::Context->Unmap(constBuffer.Get(), 0);
 
 		// Clear the back buffer (erase what's on screen) and depth buffer
 		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	background);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
-	shapes[0]->Draw();
-	shapes[1]->Draw();
-	shapes[2]->Draw();
+	// Draws each entity
+	// - Binds constant buffer
+	// - Collects world data for entity (pos, rot, scale)
+	// - Maps/copies/unmaps data
+	// - sets Vertex and Index buffers
+	for (shared_ptr ent : entities) {
+
+		constBuffData.world = ent->GetTransform()->GetWorldMatrix();
+
+		D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+		Graphics::Context->Map(constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+		memcpy(mappedBuffer.pData, &constBuffData, sizeof(constBuffData));
+		Graphics::Context->Unmap(constBuffer.Get(), 0);
+
+		ent->Draw();
+	}
 
 	ImGui::Render(); // Turns this frame’s UI into renderable triangles
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
@@ -347,7 +383,7 @@ void Game::ShowUIWindow() {
 // --------------------------------------------------------
 void Game::GraphicChangeUI() {
 	ImGui::ColorEdit4("Vertex Tint Editor", &constBuffData.colorTint.x);
-	ImGui::SliderFloat3("Vertex Position Editor", &constBuffData.offset.x, -1.0f, 1.0f);
+	//ImGui::SliderFloat3("Vertex Position Editor", &constBuffData.offset.x, -1.0f, 1.0f);
 }
 
 // --------------------------------------------------------
@@ -399,4 +435,11 @@ void Game::ShowStats() {
 
 		ImGui::TreePop();
 	}
+}
+
+// --------------------------------------------------------
+// Creates ability to transform entity using ImGui
+// --------------------------------------------------------
+void Game::TransformStats(Entity entity) {
+	
 }

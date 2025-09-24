@@ -6,6 +6,9 @@
 #include <memory>
 #include "Mesh.h"
 #include "BufferStructs.h"
+#include "Entity.h"
+
+using namespace std;
 
 class Game
 {
@@ -27,6 +30,8 @@ private:
 	void LoadShaders();
 	void CreateGeometry();
 
+	void CreateEntities();
+
 	// Refreshes ImGui 
 	void ResetUI(float deltaTime);
 
@@ -39,11 +44,16 @@ private:
 	// Adds table to UI
 	void ShowStats();
 
+	void TransformStats(Entity entity);
+
 	// Adds Graphic changing UI
 	void GraphicChangeUI();
 
 	// List of Meshes
-	std::shared_ptr<Mesh> shapes[3];
+	shared_ptr<Mesh> shapes[3];
+
+	// List of Entities
+	shared_ptr<Entity> entities[5];
 
 	// Variables for UI manipulation
 	float background[4];
