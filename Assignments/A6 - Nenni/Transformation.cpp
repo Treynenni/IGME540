@@ -2,17 +2,11 @@
 
 Transformation::Transformation()
 {
-	position.x = 0;
-	position.y = 0;
-	position.z = 0;
+	SetPosition(0, 0, 0);
 
-	rotation.x = 0;
-	rotation.y = 0;
-	rotation.z = 0;
+	SetRotation(0, 0, 0);
 
-	scale.x = 1;
-	scale.y = 1;
-	scale.z = 1;
+	SetScale(1, 1, 1);
 
 	right.x = 1;
 	right.y = 0;
@@ -113,14 +107,14 @@ XMFLOAT3& Transformation::GetForward()
 
 void Transformation::UpdateWorldMatrix() 
 {
-	XMMATRIX worldMatrix = XMMatrixScaling(scale.x, scale.y, scale.z) * XMMatrixRotationRollPitchYaw(rotation.z, rotation.x, rotation.y) * XMMatrixTranslation(position.x, position.y, position.z);
+	XMMATRIX worldMatrix = XMMatrixScaling(scale.x, scale.y, scale.z) * XMMatrixRotationRollPitchYaw(rotation.x, rotation.y, rotation.z) * XMMatrixTranslation(position.x, position.y, position.z);
 	XMStoreFloat4x4(&world, worldMatrix);
 	XMStoreFloat4x4(&worldInverseTranspose, XMMatrixInverse(0, XMMatrixTranspose(worldMatrix)));
 }
 
-void Transformation::UpdateVectors() 
+void Transformation::UpdateVectors()
 {
-	XMVECTOR direction = XMVECTOR(right.x, right.y, right.z);
+	XMVECTOR direction = XMVECTOR{ right.x, right.y, right.z };
 	XMVECTOR rotate = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
 
 	XMFLOAT3 add;
@@ -130,14 +124,14 @@ void Transformation::UpdateVectors()
 	right.y += add.y;
 	right.z += add.z;
 
-	direction = XMVECTOR(up.x, up.y, up.z);
+	direction = XMVECTOR{up.x, up.y, up.z};
 	XMStoreFloat3(&add, XMVector3Rotate(direction, rotate));
 
 	up.x += add.x;
 	up.y += add.y;
 	up.z += add.z;
 
-	direction = XMVECTOR(forward.x, forward.y, forward.z);
+	direction = XMVECTOR{ forward.x, forward.y, forward.z };
 	XMStoreFloat3(&add, XMVector3Rotate(direction, rotate));
 
 	forward.x += add.x;
@@ -161,7 +155,7 @@ void Transformation::MoveAbsolute(XMFLOAT3 addPosition)
 
 void Transformation::MoveRelative(float x, float y, float z)
 {
-	XMVECTOR direction = XMVECTOR(x, y, z);
+	XMVECTOR direction = XMVECTOR{ x, y, z };
 	XMVECTOR rotate = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
 
 	XMFLOAT3 add; 
@@ -174,7 +168,7 @@ void Transformation::MoveRelative(float x, float y, float z)
 
 void Transformation::MoveRelative(XMFLOAT3 offset)
 {
-	XMVECTOR direction = XMVECTOR(offset.x, offset.y, offset.z);
+	XMVECTOR direction = XMVECTOR{ offset.x, offset.y, offset.z };
 	XMVECTOR rotate = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
 
 	XMFLOAT3 add;

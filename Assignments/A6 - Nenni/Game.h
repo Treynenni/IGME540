@@ -7,6 +7,7 @@
 #include "Mesh.h"
 #include "BufferStructs.h"
 #include "Entity.h"
+#include "Camera.h"
 
 using namespace std;
 
@@ -25,6 +26,25 @@ public:
 	void OnResize();
 
 private:
+
+	// List of Meshes
+	shared_ptr<Mesh> shapes[3];
+
+	// List of Entities
+	shared_ptr<Entity> entities[5];
+
+	// Variables for UI manipulation
+	float background[4];
+
+	// Colors for triangle
+	float color1[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	float color2[4] = { 0.0f, 1.0f, 0.0f, 1.0f };
+	float color3[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
+	float color4[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	BufferStructs constBuffData;
+
+	shared_ptr<Camera> camera;
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void LoadShaders();
@@ -46,25 +66,10 @@ private:
 
 	void TransformStats();
 
+	void CameraStats();
+
 	// Adds Graphic changing UI
 	void GraphicChangeUI();
-
-	// List of Meshes
-	shared_ptr<Mesh> shapes[3];
-
-	// List of Entities
-	shared_ptr<Entity> entities[5];
-
-	// Variables for UI manipulation
-	float background[4];
-
-	// Colors for triangle
-	float color1[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
-	float color2[4] = { 0.0f, 1.0f, 0.0f, 1.0f };
-	float color3[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
-	float color4[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-	BufferStructs constBuffData;
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the

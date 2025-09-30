@@ -36,6 +36,8 @@ Game::Game()
 
 	constBuffData.colorTint = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
+	camera = make_shared<Camera>(Camera(Window::AspectRatio(), XMFLOAT3(0, 0.5f, 0), 90, 1, 1));
+
 	// Describe the constant buffer
 	D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
 	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -237,7 +239,7 @@ void Game::CreateEntities() {
 // --------------------------------------------------------
 void Game::OnResize()
 {
-	
+	camera->UpdateProjectionMatrix(Window::AspectRatio());
 }
 
 
@@ -254,15 +256,17 @@ void Game::Update(float deltaTime, float totalTime)
 	entities[2]->GetTransform()->SetScale(1 - abs(sin(totalTime)), 1 - abs(sin(totalTime)), 0);
 
 	//Entity Rotations
-	entities[0]->GetTransform()->Rotation(0, 0.000005, 0);
-	entities[3]->GetTransform()->Rotation(0, 0.0001, 0);
-	entities[4]->GetTransform()->Rotation(0, -0.0001, 0);
+	entities[0]->GetTransform()->Rotation(0, 0, 0.000005);
+	entities[3]->GetTransform()->Rotation(0, 0, 0.0001);
+	entities[4]->GetTransform()->Rotation(0, 0, -0.0001);
 
 	//Entity Positions
 	entities[1]->GetTransform()->SetPosition(0.75, cos(totalTime), 0);
 	entities[2]->GetTransform()->SetPosition(-0.75, -cos(totalTime), 0);
 	entities[3]->GetTransform()->SetPosition(sin(totalTime), 0.75, 0);
 	entities[4]->GetTransform()->SetPosition(-sin(totalTime), -0.75, 0);
+
+	camera->Update(deltaTime);
 
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
@@ -285,6 +289,9 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
+	constBuffData.projection = camera->GetProjectionMatrix();
+	constBuffData.view = camera->GetViewMatrix();
+
 	// Draws each entity
 	// - Binds constant buffer
 	// - Collects world data for entity (pos, rot, scale)
@@ -293,7 +300,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	for (shared_ptr ent : entities) {
 
 		constBuffData.world = ent->GetTransform()->GetWorldMatrix();
-
+		
 		D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
 		Graphics::Context->Map(constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
 		memcpy(mappedBuffer.pData, &constBuffData, sizeof(constBuffData));
@@ -477,4 +484,9 @@ void Game::TransformStats()
 
 		ImGui::TreePop();
 	}
+}
+
+void Game::CameraStats() 
+{
+
 }
