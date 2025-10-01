@@ -33,6 +33,9 @@ private:
 	// List of Entities
 	shared_ptr<Entity> entities[5];
 
+	// List of Cameras
+	shared_ptr<Camera> cameras[3];
+
 	// Variables for UI manipulation
 	float background[4];
 
@@ -45,6 +48,8 @@ private:
 	BufferStructs constBuffData;
 
 	shared_ptr<Camera> camera;
+
+	int currentCam;
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void LoadShaders();

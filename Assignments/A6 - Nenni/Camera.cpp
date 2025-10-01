@@ -1,18 +1,9 @@
 #include "Camera.h"
 
-#define _USE_MATH_DEFINES
-
-#include <math.h>
-
 // ---------------------------------- Constructor ----------------------------------
-Camera::Camera(float aspectRatio, XMFLOAT3 initPosition, float inFov, float inMoveSpeed, float inMouseSpeed)
+Camera::Camera(float aspectRatio, XMFLOAT3 initPosition, float inFov, float inMoveSpeed, float inMouseSpeed) : transform(), fov(inFov), moveSpeed(inMoveSpeed), mouseSpeed(inMouseSpeed)
 {
-	transform = Transformation();
 	transform.SetPosition(initPosition);
-
-	fov = inFov;
-	moveSpeed = inMoveSpeed;
-	mouseSpeed = inMouseSpeed;
 
 	//Set up projection and view matrices
 	UpdateViewMatrix();
@@ -32,6 +23,16 @@ XMFLOAT4X4 Camera::GetProjectionMatrix()
 	return projectionMatrix;
 }
 
+float Camera::GetFOV()
+{
+	return fov;
+}
+
+shared_ptr<Transformation> Camera::GetTransform()
+{
+	return make_shared<Transformation>(transform);
+}
+
 // ---------------------------------- Update Methods ----------------------------------
 /// <summary>
 /// Updates the projection matrix if aspect ratio is changed
@@ -47,9 +48,9 @@ void Camera::UpdateProjectionMatrix(float aspectRatio)
 /// </summary>
 void Camera::UpdateViewMatrix()
 {
-	XMVECTOR position = XMVECTOR{ transform.GetPosition().x, transform.GetPosition().y, transform.GetPosition().z };
-	XMVECTOR direction = XMVECTOR{ transform.GetForward().x, transform.GetForward().y, transform.GetForward().z };
-	XMVECTOR up = XMVECTOR{ transform.GetUp().x, transform.GetUp().y, transform.GetUp().z };
+	XMVECTOR position = XMLoadFloat3(&transform.GetPosition());
+	XMVECTOR direction = XMLoadFloat3(&transform.GetForward());
+	XMVECTOR up = XMLoadFloat3(&transform.GetUp());
 
 	XMStoreFloat4x4(&viewMatrix, XMMatrixLookToLH(position, direction, up));
 }
@@ -62,51 +63,50 @@ void Camera::Update(float dt)
 {
 	if (Input::KeyDown('W')) 
 	{
-		transform.MoveRelative(XMFLOAT3((transform.GetForward().x * moveSpeed), (transform.GetForward().y * moveSpeed), (transform.GetForward().z * moveSpeed)));
+		transform.MoveRelative(XMFLOAT3((transform.GetForward().x * moveSpeed * dt), (transform.GetForward().y * moveSpeed * dt), (transform.GetForward().z * moveSpeed * dt)));
 	}
 
 	if (Input::KeyDown('S')) 
 	{
-		transform.MoveRelative(XMFLOAT3((transform.GetForward().x * -moveSpeed), (transform.GetForward().y * -moveSpeed), (transform.GetForward().z * -moveSpeed)));
+		transform.MoveRelative(XMFLOAT3((transform.GetForward().x * -moveSpeed * dt), (transform.GetForward().y * -moveSpeed * dt), (transform.GetForward().z * -moveSpeed * dt)));
 	}
 
 	if (Input::KeyDown('A')) 
 	{
-		transform.MoveRelative(XMFLOAT3((transform.GetRight().x * -moveSpeed), (transform.GetRight().y * -moveSpeed), (transform.GetRight().z * -moveSpeed)));
+		transform.MoveRelative(XMFLOAT3((transform.GetRight().x * -moveSpeed * dt), (transform.GetRight().y * -moveSpeed * dt), (transform.GetRight().z * -moveSpeed * dt)));
 	}
 
 	if (Input::KeyDown('D')) 
 	{
-		transform.MoveRelative(XMFLOAT3((transform.GetRight().x * moveSpeed), (transform.GetRight().y * moveSpeed), (transform.GetRight().z * moveSpeed)));
+		transform.MoveRelative(XMFLOAT3((transform.GetRight().x * moveSpeed * dt), (transform.GetRight().y * moveSpeed * dt), (transform.GetRight().z * moveSpeed * dt)));
 	}
 
 	if (Input::KeyDown(VK_SPACE)) 
 	{
-		transform.MoveAbsolute(XMFLOAT3((transform.GetUp().x * moveSpeed), (transform.GetUp().y * moveSpeed), (transform.GetUp().z * moveSpeed)));
+		transform.MoveAbsolute(XMFLOAT3((transform.GetUp().x * moveSpeed * dt), (transform.GetUp().y * moveSpeed * dt), (transform.GetUp().z * moveSpeed * dt)));
 	}
 
 	if (Input::KeyDown('X')) 
 	{
-		transform.MoveAbsolute(XMFLOAT3((transform.GetUp().x * -moveSpeed), (transform.GetUp().y * -moveSpeed), (transform.GetUp().z * -moveSpeed)));
+		transform.MoveAbsolute(XMFLOAT3((transform.GetUp().x * -moveSpeed * dt), (transform.GetUp().y * -moveSpeed * dt), (transform.GetUp().z * -moveSpeed * dt)));
 	}
 
 	if (Input::MouseLeftDown()) 
 	{
-		int cursorMovementX = Input::GetMouseXDelta() * mouseSpeed;
-		int cursorMovementY = Input::GetMouseYDelta() * mouseSpeed;
+		int cursorMovementX = Input::GetMouseXDelta();
+		int cursorMovementY = Input::GetMouseYDelta();
 
-		/*
-		transform.Rotation(cursorMovementY, cursorMovementX, 0);
-
-		if (transform.GetRotation().x >= (0.5 * M_PI)) 
+		transform.Rotation(cursorMovementY * mouseSpeed, cursorMovementX * mouseSpeed, 0);
+		
+		if (transform.GetRotation().x >= (0.5 * XM_PI) - 0.01f) 
 		{
-			transform.SetRotation(0.5 * M_PI, transform.GetRotation().y, transform.GetRotation().z);
+			transform.SetRotation(0.5 * XM_PI, transform.GetRotation().y, transform.GetRotation().z);
 		} 
-		else if(transform.GetRotation().x <= (-0.5 * M_PI))
+		else if(transform.GetRotation().x <= (-0.5 * XM_PI) + 0.01f)
 		{
-			transform.SetRotation(-0.5 * M_PI, transform.GetRotation().y, transform.GetRotation().z);
+			transform.SetRotation(-0.5 * XM_PI, transform.GetRotation().y, transform.GetRotation().z);
 		}
-		*/
+		
 	}
 
 	UpdateViewMatrix();

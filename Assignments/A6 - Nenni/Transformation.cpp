@@ -3,22 +3,8 @@
 Transformation::Transformation()
 {
 	SetPosition(0, 0, 0);
-
 	SetRotation(0, 0, 0);
-
 	SetScale(1, 1, 1);
-
-	right.x = 1;
-	right.y = 0;
-	right.z = 0;
-
-	up.x = 0;
-	up.y = 1;
-	up.z = 0;
-
-	forward.x = 0;
-	forward.y = 0;
-	forward.z = 1;
 
 	XMStoreFloat4x4(&world, XMMatrixIdentity());
 	XMStoreFloat4x4(&worldInverseTranspose, XMMatrixIdentity());
@@ -42,11 +28,15 @@ void Transformation::SetRotation(float p, float y, float r)
 	rotation.x = p;
 	rotation.y = y;
 	rotation.z = r;
+
+	UpdateVectors();
 }
 
 void Transformation::SetRotation(XMFLOAT3 newRotation)
 {
 	rotation = newRotation;
+
+	UpdateVectors();
 }
 
 void Transformation::SetScale(float x, float y, float z)
@@ -114,29 +104,12 @@ void Transformation::UpdateWorldMatrix()
 
 void Transformation::UpdateVectors()
 {
-	XMVECTOR direction = XMVECTOR{ right.x, right.y, right.z };
-	XMVECTOR rotate = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	XMVECTOR rotQuat = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
 
-	XMFLOAT3 add;
-	XMStoreFloat3(&add, XMVector3Rotate(direction, rotate));
-
-	right.x += add.x;
-	right.y += add.y;
-	right.z += add.z;
-
-	direction = XMVECTOR{up.x, up.y, up.z};
-	XMStoreFloat3(&add, XMVector3Rotate(direction, rotate));
-
-	up.x += add.x;
-	up.y += add.y;
-	up.z += add.z;
-
-	direction = XMVECTOR{ forward.x, forward.y, forward.z };
-	XMStoreFloat3(&add, XMVector3Rotate(direction, rotate));
-
-	forward.x += add.x;
-	forward.y += add.y;
-	forward.z += add.z;
+	XMStoreFloat3(&right, XMVector3Rotate(XMVectorSet(1, 0, 0, 0), rotQuat));
+	XMStoreFloat3(&up, XMVector3Rotate(XMVectorSet(0, 1, 0, 0), rotQuat));
+	XMStoreFloat3(&forward, XMVector3Rotate(XMVectorSet(0, 0, 1, 0), rotQuat));
+	float b = 0;
 }
 
 void Transformation::MoveAbsolute(float x, float y, float z)
@@ -168,7 +141,7 @@ void Transformation::MoveRelative(float x, float y, float z)
 
 void Transformation::MoveRelative(XMFLOAT3 offset)
 {
-	XMVECTOR direction = XMVECTOR{ offset.x, offset.y, offset.z };
+	XMVECTOR direction = XMLoadFloat3(&offset);
 	XMVECTOR rotate = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
 
 	XMFLOAT3 add;

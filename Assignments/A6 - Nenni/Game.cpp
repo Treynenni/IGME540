@@ -36,7 +36,13 @@ Game::Game()
 
 	constBuffData.colorTint = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	camera = make_shared<Camera>(Camera(Window::AspectRatio(), XMFLOAT3(0, 0.5f, 0), 90, 1, 1));
+	cameras[0] = make_shared<Camera>(Camera(Window::AspectRatio(), XMFLOAT3(0, 0, -1.0f), XM_PI / 2, 1.0, 0.01));
+	cameras[1] = make_shared<Camera>(Camera(Window::AspectRatio(), XMFLOAT3(0, 0, -2.0f), XM_PI / 3, 1.0, 0.01));
+	cameras[2] = make_shared<Camera>(Camera(Window::AspectRatio(), XMFLOAT3(0, 0, -3.0f), XM_PI / 4, 1.0, 0.01));
+
+	camera = cameras[0];
+
+	currentCam = 1;
 
 	// Describe the constant buffer
 	D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
@@ -239,7 +245,10 @@ void Game::CreateEntities() {
 // --------------------------------------------------------
 void Game::OnResize()
 {
-	camera->UpdateProjectionMatrix(Window::AspectRatio());
+	for (shared_ptr cam : cameras) 
+	{
+		cam->UpdateProjectionMatrix(Window::AspectRatio());
+	}
 }
 
 
@@ -255,10 +264,12 @@ void Game::Update(float deltaTime, float totalTime)
 	entities[1]->GetTransform()->SetScale(abs(sin(totalTime)), abs(sin(totalTime)), 0);
 	entities[2]->GetTransform()->SetScale(1 - abs(sin(totalTime)), 1 - abs(sin(totalTime)), 0);
 
+	/*
 	//Entity Rotations
 	entities[0]->GetTransform()->Rotation(0, 0, 0.000005);
 	entities[3]->GetTransform()->Rotation(0, 0, 0.0001);
 	entities[4]->GetTransform()->Rotation(0, 0, -0.0001);
+	*/
 
 	//Entity Positions
 	entities[1]->GetTransform()->SetPosition(0.75, cos(totalTime), 0);
@@ -384,6 +395,8 @@ void Game::ShowUIWindow() {
 
 	TransformStats();
 
+	CameraStats();
+
 	ImGui::End(); // Ends the current window
 }
 
@@ -488,5 +501,35 @@ void Game::TransformStats()
 
 void Game::CameraStats() 
 {
+	if (ImGui::TreeNode("Cameras")) 
+	{
+		if (ImGui::TreeNode("Current Camera")) 
+		{
+			float fov = camera->GetFOV();
+			float x = camera->GetTransform()->GetPosition().x;
+			float y = camera->GetTransform()->GetPosition().y;
+			float z = camera->GetTransform()->GetPosition().z;
 
+			ImGui::Text("Camera number: %d", currentCam);
+			ImGui::Text("Position: x: %.2f, y: %.2f, z: %.2f", x, y, z);
+			ImGui::Text("Fov: %.2f", fov);
+			ImGui::TreePop();
+		}
+		if (ImGui::Button("Camera 1")) 
+		{
+			camera = cameras[0];
+			currentCam = 1;
+		}
+		if (ImGui::Button("Camera 2")) 
+		{
+			camera = cameras[1];
+			currentCam = 2;
+		}
+		if (ImGui::Button("Camera 3")) 
+		{
+			camera = cameras[2];
+			currentCam = 3;
+		}
+		ImGui::TreePop();
+	}
 }
