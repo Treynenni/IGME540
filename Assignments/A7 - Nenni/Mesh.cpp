@@ -10,7 +10,7 @@ Mesh::Mesh(unsigned int* indices, Vertex* vertices, int iCount, int vCount)
 	CreateBuffers(vertices, indices);
 }
 
-Mesh::Mesh(char* objFile)
+Mesh::Mesh(const char* objFile)
 {
 	// Author: Chris Cascioli
 // Purpose: Basic .OBJ 3D model loading, supporting positions, uvs and normals

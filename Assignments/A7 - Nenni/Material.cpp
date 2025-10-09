@@ -1,6 +1,6 @@
 #include "Material.h"
 
-Material::Material(XMFLOAT4 inTint, Microsoft::WRL::ComPtr<ID3D11VertexShader> inVertexShader, Microsoft::WRL::ComPtr<ID3D11VertexShader> inPixelShader)
+Material::Material(XMFLOAT4 inTint, Microsoft::WRL::ComPtr<ID3D11VertexShader> inVertexShader, Microsoft::WRL::ComPtr<ID3D11PixelShader> inPixelShader)
 {
 	SetTint(inTint);
 	SetVertexShader(inVertexShader);
@@ -17,7 +17,7 @@ void Material::SetVertexShader(Microsoft::WRL::ComPtr<ID3D11VertexShader> inVert
 	vertexShader = inVertexShader;
 }
 
-void Material::SetPixelShader(Microsoft::WRL::ComPtr<ID3D11VertexShader> inPixelShader)
+void Material::SetPixelShader(Microsoft::WRL::ComPtr<ID3D11PixelShader> inPixelShader)
 {
 	pixelShader = inPixelShader;
 }

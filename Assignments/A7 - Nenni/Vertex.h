@@ -2,6 +2,8 @@
 
 #include <DirectXMath.h>
 
+using namespace DirectX;
+
 // --------------------------------------------------------
 // A custom vertex definition
 //
@@ -10,6 +12,6 @@
 struct Vertex
 {
 	XMFLOAT3 Position;	    // The local position of the vertex
-	XMFLOAT2 UV;           
-	XMFLOAT3 Normal;
+	XMFLOAT2 UV;            // UV Coords
+	XMFLOAT3 Normal;		// Normal Vector of Vertex
 };

@@ -8,11 +8,11 @@ using namespace DirectX;
 class Material
 {
 public:
-	Material(XMFLOAT4 inTint, Microsoft::WRL::ComPtr<ID3D11VertexShader> inVertexShader, Microsoft::WRL::ComPtr<ID3D11VertexShader> inPixelShader);
+	Material(XMFLOAT4 inTint, Microsoft::WRL::ComPtr<ID3D11VertexShader> inVertexShader, Microsoft::WRL::ComPtr<ID3D11PixelShader> inPixelShader);
 
 	void SetTint(XMFLOAT4 inTint);
 	void SetVertexShader(Microsoft::WRL::ComPtr<ID3D11VertexShader> inVertexShader);
-	void SetPixelShader(Microsoft::WRL::ComPtr<ID3D11VertexShader> inPixelShader);
+	void SetPixelShader(Microsoft::WRL::ComPtr<ID3D11PixelShader> inPixelShader);
 
 	XMFLOAT4 GetTint();
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> GetVertexShader();

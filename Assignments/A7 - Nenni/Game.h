@@ -29,13 +29,13 @@ public:
 private:
 
 	// List of Materials
-	shared_ptr<Material> materials[1];
+	shared_ptr<Material> materials[3];
 
 	// List of Meshes
-	shared_ptr<Mesh> shapes[7];
+	shared_ptr<Mesh> shapes[8];
 
 	// List of Entities
-	shared_ptr<Entity> entities[5];
+	shared_ptr<Entity> entities[8];
 
 	// List of Cameras
 	shared_ptr<Camera> cameras[3];
@@ -88,10 +88,10 @@ private:
 
 	// Constant Buffer
 	Microsoft::WRL::ComPtr<ID3D11Buffer> constBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> pixelConstBuffer;
 
-	// Shaders and shader-related constructs
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
+
+	// Shader-related Construct
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 };
 

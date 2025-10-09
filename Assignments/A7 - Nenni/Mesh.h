@@ -15,7 +15,7 @@ public:
 	
 	// Constructor/Destructor
 	Mesh(unsigned int* indices, Vertex* vertices, int iCount, int vCount);
-	Mesh(char* objFile);
+	Mesh(const char* objFile);
 	~Mesh();
 
 	// Getter Methods
