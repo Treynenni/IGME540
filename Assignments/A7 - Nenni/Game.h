@@ -30,13 +30,13 @@ public:
 private:
 
 	// List of Materials
-	shared_ptr<Material> materials[3];
+	shared_ptr<Material> materials[6];
 
 	// List of Meshes
-	shared_ptr<Mesh> shapes[8];
+	shared_ptr<Mesh> shapes[7];
 
 	// List of Entities
-	shared_ptr<Entity> entities[8];
+	shared_ptr<Entity> entities[7];
 
 	// List of Cameras
 	shared_ptr<Camera> cameras[3];
@@ -50,7 +50,9 @@ private:
 	float color3[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
 	float color4[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-	BufferStructs constBuffData;
+	VertexBufferData constVertBuffData;
+
+	PixelBufferData constPixBuffData;
 
 	shared_ptr<Camera> camera;
 

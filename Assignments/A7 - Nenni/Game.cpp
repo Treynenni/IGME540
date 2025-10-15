@@ -34,9 +34,9 @@ Game::Game()
 	background[2] = 0.75f;
 	background[3] = 0.0f;
 
-	constBuffData.colorTint = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	constPixBuffData.colorTint = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	cameras[0] = make_shared<Camera>(Camera(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -1.0f), XM_PI / 2.0f, 1.0f, 0.01f));
+	cameras[0] = make_shared<Camera>(Camera(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -8.0f), XM_PI / 2.0f, 1.0f, 0.01f));
 	cameras[1] = make_shared<Camera>(Camera(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -2.0f), XM_PI / 3.0f, 1.0f, 0.01f));
 	cameras[2] = make_shared<Camera>(Camera(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -3.0f), XM_PI / 4.0f, 1.0f, 0.01f));
 
@@ -44,10 +44,10 @@ Game::Game()
 
 	currentCam = 1;
 
-	// Describe the constant buffer
+	// Describe the constant vertex buffer
 	D3D11_BUFFER_DESC cbDesc = {}; // Sets struct to all zeros
 	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.ByteWidth = (sizeof(BufferStructs) + 15) / 16 * 16; // Must be a multiple of 16
+	cbDesc.ByteWidth = (sizeof(VertexBufferData) + 15) / 16 * 16; // Must be a multiple of 16
 	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
 	Graphics::Device->CreateBuffer(&cbDesc, 0, vertexcBuffer.GetAddressOf());
@@ -57,13 +57,19 @@ Game::Game()
 		1, // How many are we setting right now?
 		vertexcBuffer.GetAddressOf()); // Array of buffers (or address of just one)
 
-	// Helper methods for loading shaders, creating some basic
-	// geometry to draw and some simple camera matrices.
-	//  - You'll be expanding and/or replacing these later
-	LoadAssets();
-	CreateEntities();
+	// Describe the constant pixel buffer
+	D3D11_BUFFER_DESC pcbDesc = {}; // Sets struct to all zeros
+	pcbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	pcbDesc.ByteWidth = (sizeof(PixelBufferData) + 15) / 16 * 16; // Must be a multiple of 16
+	pcbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	pcbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	Graphics::Device->CreateBuffer(&pcbDesc, 0, pixelcBuffer.GetAddressOf());
 
-	ID3DBlob* vertexShaderBlob;
+	Graphics::Context->PSSetConstantBuffers(
+		0, // Which slot (register) to bind the buffer to?
+		1, // How many are we setting right now?
+		pixelcBuffer.GetAddressOf()); // Array of buffers (or address of just one)
+
 
 	D3D11_INPUT_ELEMENT_DESC inputElements[3] = {};
 
@@ -74,7 +80,7 @@ Game::Game()
 
 	// Set up the second element - UV coords, which is 2 more float values
 	inputElements[1].Format = DXGI_FORMAT_R32G32_FLOAT;					// 2x 32-bit floats
-	inputElements[1].SemanticName = "UV";								// Match our vertex shader input!
+	inputElements[1].SemanticName = "TEXCOORD";							// Match our vertex shader input!
 	inputElements[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;	// After the previous element
 
 	// Set up the second element - UV coords, which is 3 more float values
@@ -82,6 +88,8 @@ Game::Game()
 	inputElements[2].SemanticName = "NORMAL";							// Match our vertex shader input!
 	inputElements[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;	// After the previous element
 
+	ID3DBlob* vertexShaderBlob;
+	D3DReadFileToBlob(FixPath(L"VertexShader.cso").c_str(), &vertexShaderBlob);
 
 	// Create the input layout, verifying our description against actual shader code
 	Graphics::Device->CreateInputLayout(
@@ -116,8 +124,13 @@ Game::Game()
 		ImGui::StyleColorsDark();
 		//ImGui::StyleColorsLight();
 		//ImGui::StyleColorsClassic();
-
 	}
+
+	// Helper methods for loading shaders, creating some basic
+	// geometry to draw and some simple camera matrices.
+	//  - You'll be expanding and/or replacing these later
+	LoadAssets();
+	CreateEntities();
 }
 
 
@@ -141,19 +154,27 @@ Game::~Game()
 // --------------------------------------------------------
 void Game::LoadAssets()
 {
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> basicVS = LoadVertexShader(FixPath(L"shaders/VertexShader.cso").c_str());
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> basicPixelShader = LoadPixelShader(FixPath(L"shaders/PixelShader.cso").c_str());
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> fancyPixelShader = LoadPixelShader(FixPath(L"shaders/FancyPixelShader.cso").c_str());
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> normalPreviewPS = LoadPixelShader(FixPath(L"shaders/NormalPreviewPS.cso").c_str());
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> uvPreviewPS = LoadPixelShader(FixPath(L"shaders/UVPreviewPS.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> basicVS = LoadVertexShader(FixPath(L"VertexShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> basicPS = LoadPixelShader(FixPath(L"PixelShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> uvPS = LoadPixelShader(FixPath(L"UVsPixelShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> normalPS = LoadPixelShader(FixPath(L"NormalPixelShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> customPS = LoadPixelShader(FixPath(L"CustomPixelShader.cso").c_str());
 
-	shapes[0] = make_shared<Mesh>(FixPath(L"assets/cube.obj").c_str());
-	shapes[1] = make_shared<Mesh>(FixPath(L"assets/cylinder.obj").c_str());
-	shapes[2] = make_shared<Mesh>(FixPath(L"assets/helix.obj").c_str());
-	shapes[3] = make_shared<Mesh>(FixPath(L"assets/quad.obj").c_str());
-	shapes[4] = make_shared<Mesh>(FixPath(L"assets/quad_double_sided.obj").c_str());
-	shapes[5] = make_shared<Mesh>(FixPath(L"assets/sphere.obj").c_str());
-	shapes[6] = make_shared<Mesh>(FixPath(L"assets/torus.obj").c_str());
+
+	materials[0] = make_shared<Material>(XMFLOAT4(1, 0, 0, 0), basicVS, basicPS);
+	materials[1] = make_shared<Material>(XMFLOAT4(0, 1, 0, 0), basicVS, basicPS);
+	materials[2] = make_shared<Material>(XMFLOAT4(0, 0, 1, 0), basicVS, basicPS);
+	materials[3] = make_shared<Material>(XMFLOAT4(0, 0, 0, 0), basicVS, uvPS);
+	materials[4] = make_shared<Material>(XMFLOAT4(0, 0, 0, 0), basicVS, normalPS);
+	materials[5] = make_shared<Material>(XMFLOAT4(1, 0, 0, 0), basicVS, customPS);
+
+	shapes[0] = make_shared<Mesh>(FixPath(L"../../assets/cube.obj").c_str());
+	shapes[1] = make_shared<Mesh>(FixPath(L"../../assets/cylinder.obj").c_str());
+	shapes[2] = make_shared<Mesh>(FixPath(L"../../assets/helix.obj").c_str());
+	shapes[3] = make_shared<Mesh>(FixPath(L"../../assets/quad.obj").c_str());
+	shapes[4] = make_shared<Mesh>(FixPath(L"../../assets/quad_double_sided.obj").c_str());
+	shapes[5] = make_shared<Mesh>(FixPath(L"../../assets/sphere.obj").c_str());
+	shapes[6] = make_shared<Mesh>(FixPath(L"../../assets/torus.obj").c_str());
 }
 
 // --------------------------------------------------------
@@ -161,8 +182,20 @@ void Game::LoadAssets()
 // --------------------------------------------------------
 void Game::CreateEntities() 
 {
-	entities[0] = make_shared<Entity>(shapes[0], materials[0]);
-	entities[1] = make_shared<Entity>(shapes[1], materials[1]);
+	entities[0] = make_shared<Entity>(shapes[3], materials[0]);
+	entities[1] = make_shared<Entity>(shapes[4], materials[1]);
+	entities[2] = make_shared<Entity>(shapes[0], materials[2]);
+	entities[3] = make_shared<Entity>(shapes[1], materials[3]);
+	entities[4] = make_shared<Entity>(shapes[2], materials[4]);
+	entities[5] = make_shared<Entity>(shapes[5], materials[5]);
+	entities[6] = make_shared<Entity>(shapes[6], materials[5]);
+
+	entities[0]->GetTransform()->MoveAbsolute(-9, 0, 0);
+	entities[1]->GetTransform()->MoveAbsolute(-6, 0, 0);
+	entities[2]->GetTransform()->MoveAbsolute(-3, 0, 0);
+	entities[4]->GetTransform()->MoveAbsolute(3, 0, 0);
+	entities[5]->GetTransform()->MoveAbsolute(6, 0, 0);
+	entities[6]->GetTransform()->MoveAbsolute(9, 0, 0);
 }
 
 
@@ -188,6 +221,11 @@ void Game::Update(float deltaTime, float totalTime)
 
 	camera->Update(deltaTime);
 
+	for (auto& e : entities)
+	{
+		e->GetTransform()->Rotation(0, deltaTime, 0);
+	}
+
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
@@ -209,8 +247,10 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
-	constBuffData.projection = camera->GetProjectionMatrix();
-	constBuffData.view = camera->GetViewMatrix();
+	constVertBuffData.projection = camera->GetProjectionMatrix();
+	constVertBuffData.view = camera->GetViewMatrix();
+
+	constPixBuffData.time = totalTime;
 
 	// Draws each entity
 	// - Binds constant buffer
@@ -219,12 +259,21 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - sets Vertex and Index buffers
 	for (shared_ptr ent : entities) {
 
-		constBuffData.world = ent->GetTransform()->GetWorldMatrix();
-		
-		D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-		Graphics::Context->Map(vertexcBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-		memcpy(mappedBuffer.pData, &constBuffData, sizeof(constBuffData));
+		std::shared_ptr<Material> mat = ent->GetMaterial();
+
+		constVertBuffData.world = ent->GetTransform()->GetWorldMatrix();
+
+		constPixBuffData.colorTint = ent->GetMaterial()->GetTint();
+
+		D3D11_MAPPED_SUBRESOURCE mappedvertBuffer = {};
+		Graphics::Context->Map(vertexcBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedvertBuffer);
+		memcpy(mappedvertBuffer.pData, &constVertBuffData, sizeof(constVertBuffData));
 		Graphics::Context->Unmap(vertexcBuffer.Get(), 0);
+
+		D3D11_MAPPED_SUBRESOURCE mappedpixelBuffer = {};
+		Graphics::Context->Map(pixelcBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedpixelBuffer);
+		memcpy(mappedpixelBuffer.pData, &constPixBuffData, sizeof(constPixBuffData));
+		Graphics::Context->Unmap(pixelcBuffer.Get(), 0);
 
 		ent->Draw();
 	}
@@ -261,7 +310,9 @@ Microsoft::WRL::ComPtr<ID3D11VertexShader> Game::LoadVertexShader(const wchar_t*
 		vertexShaderBlob->GetBufferPointer(),	// Get a pointer to the blob's contents
 		vertexShaderBlob->GetBufferSize(),		// How big is that data?
 		0,										// No classes in this shader
-		shader.GetAddressOf());			// The address of the ID3D11VertexShader pointer
+		shader.GetAddressOf());					// The address of the ID3D11VertexShader pointer
+
+	return shader;
 }
 
 Microsoft::WRL::ComPtr<ID3D11PixelShader> Game::LoadPixelShader(const wchar_t* shaderPath)
@@ -275,8 +326,9 @@ Microsoft::WRL::ComPtr<ID3D11PixelShader> Game::LoadPixelShader(const wchar_t* s
 		pixelShaderBlob->GetBufferPointer(),	// Pointer to blob's contents
 		pixelShaderBlob->GetBufferSize(),		// How big is that data?
 		0,										// No classes in this shader
-		shader.GetAddressOf());			// Address of the ID3D11PixelShader pointer
+		shader.GetAddressOf());					// Address of the ID3D11PixelShader pointer
 
+	return shader;
 }
 
 // --------------------------------------------------------
@@ -342,7 +394,7 @@ void Game::ShowUIWindow() {
 // Creates Graphic Updating UI
 // --------------------------------------------------------
 void Game::GraphicChangeUI() {
-	ImGui::ColorEdit4("Vertex Tint Editor", &constBuffData.colorTint.x);
+	ImGui::ColorEdit4("Vertex Tint Editor", &constPixBuffData.colorTint.x);
 	//ImGui::SliderFloat3("Vertex Position Editor", &constBuffData.offset.x, -1.0f, 1.0f);
 }
 

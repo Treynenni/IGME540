@@ -38,7 +38,6 @@ private:
 	int vertexCount;
 
 	void CreateBuffers(Vertex* vertices, unsigned int* indices);
-	void CreateBuffers(std::vector<Vertex> verts, std::vector<UINT> indices);
 
 };
 

@@ -11,9 +11,9 @@ struct VertexToPixel
 	//  |   Name          Semantic
 	//  |    |                |
 	//  v    v                v
-	float4 screenPosition	: SV_POSITION;
-    float2 uv               : TEXCOORD;
-    float3 normal           : NORMAL;
+    float4 screenPosition : SV_POSITION;
+    float2 uv : TEXCOORD;
+    float3 normal : NORMAL;
 };
 
 cbuffer ExternalData : register(b0)
@@ -33,9 +33,5 @@ cbuffer ExternalData : register(b0)
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	// Just return the input color
-	// - This color (like most values passing through the rasterizer) is 
-	//   interpolated for each pixel between the corresponding vertices 
-	//   of the triangle we're rendering
-    return color;
+    return float4(1 / sqrt(time), 1 / sqrt(time), 1 / sqrt(time), 0);
 }
