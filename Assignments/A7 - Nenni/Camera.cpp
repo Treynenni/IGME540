@@ -63,32 +63,32 @@ void Camera::Update(float dt)
 {
 	if (Input::KeyDown('W')) 
 	{
-		transform.MoveRelative(XMFLOAT3((transform.GetForward().x * moveSpeed * dt), (transform.GetForward().y * moveSpeed * dt), (transform.GetForward().z * moveSpeed * dt)));
+		transform.MoveRelative(0, 0, moveSpeed * dt);
 	}
 
 	if (Input::KeyDown('S')) 
 	{
-		transform.MoveRelative(XMFLOAT3((transform.GetForward().x * -moveSpeed * dt), (transform.GetForward().y * -moveSpeed * dt), (transform.GetForward().z * -moveSpeed * dt)));
+		transform.MoveRelative(0, 0, -moveSpeed * dt);
 	}
 
 	if (Input::KeyDown('A')) 
 	{
-		transform.MoveRelative(XMFLOAT3((transform.GetRight().x * -moveSpeed * dt), (transform.GetRight().y * -moveSpeed * dt), (transform.GetRight().z * -moveSpeed * dt)));
+		transform.MoveRelative(-moveSpeed * dt, 0, 0);
 	}
 
 	if (Input::KeyDown('D')) 
 	{
-		transform.MoveRelative(XMFLOAT3((transform.GetRight().x * moveSpeed * dt), (transform.GetRight().y * moveSpeed * dt), (transform.GetRight().z * moveSpeed * dt)));
+		transform.MoveRelative(moveSpeed * dt, 0, 0);
 	}
 
 	if (Input::KeyDown(VK_SPACE)) 
 	{
-		transform.MoveAbsolute(XMFLOAT3((transform.GetUp().x * moveSpeed * dt), (transform.GetUp().y * moveSpeed * dt), (transform.GetUp().z * moveSpeed * dt)));
+		transform.MoveRelative(0, moveSpeed * dt, 0);
 	}
 
 	if (Input::KeyDown('X')) 
 	{
-		transform.MoveAbsolute(XMFLOAT3((transform.GetUp().x * -moveSpeed * dt), (transform.GetUp().y * -moveSpeed * dt), (transform.GetUp().z * -moveSpeed * dt)));
+		transform.MoveRelative(0, -moveSpeed * dt, 0);
 	}
 
 	if (Input::MouseLeftDown()) 

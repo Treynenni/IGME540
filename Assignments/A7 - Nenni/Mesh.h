@@ -8,6 +8,7 @@
 #include "Graphics.h" 
 #include "Vertex.h"
 
+using namespace std;
 
 class Mesh
 {
@@ -15,7 +16,7 @@ public:
 	
 	// Constructor/Destructor
 	Mesh(unsigned int* indices, Vertex* vertices, int iCount, int vCount);
-	Mesh(const char* objFile);
+	Mesh(const wstring& objFile);
 	~Mesh();
 
 	// Getter Methods

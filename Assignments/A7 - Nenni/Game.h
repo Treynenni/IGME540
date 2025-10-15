@@ -24,6 +24,7 @@ public:
 	// Primary functions
 	void Update(float deltaTime, float totalTime);
 	void Draw(float deltaTime, float totalTime);
+	
 	void OnResize();
 
 private:
@@ -55,21 +56,19 @@ private:
 
 	int currentCam;
 
-	// Initialization helper methods - feel free to customize, combine, remove, etc.
-	void LoadShaders();
+	// Helper Methods
 
-	void CreateMaterials();
-	void CreateGeometry();
+	void LoadAssets();
 	void CreateEntities();
+
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> LoadVertexShader(const wchar_t* shaderPath);
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> LoadPixelShader(const wchar_t* shaderPath);
 
 	// Refreshes ImGui 
 	void ResetUI(float deltaTime);
 
 	// Builds UI
 	void ShowUIWindow();
-
-	// Inverts all colors
-	void InvertColor();
 
 	// Adds table to UI
 	void ShowStats();
@@ -86,10 +85,9 @@ private:
 	//     Component Object Model, which DirectX objects do
 	//  - More info here: https://github.com/Microsoft/DirectXTK/wiki/ComPtr
 
-	// Constant Buffer
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constBuffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> pixelConstBuffer;
-
+	// Constant Buffers
+	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexcBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> pixelcBuffer;
 
 	// Shader-related Construct
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
