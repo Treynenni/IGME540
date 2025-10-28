@@ -30,7 +30,7 @@ public:
 private:
 
 	// List of Materials
-	shared_ptr<Material> materials[6];
+	shared_ptr<Material> materials[3];
 
 	// List of Meshes
 	shared_ptr<Mesh> shapes[7];
@@ -58,13 +58,13 @@ private:
 
 	int currentCam;
 
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> LoadVertexShader(const wchar_t* shaderPath);
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> LoadPixelShader(const wchar_t* shaderPath);
+
 	// Helper Methods
 
 	void LoadAssets();
 	void CreateEntities();
-
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> LoadVertexShader(const wchar_t* shaderPath);
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> LoadPixelShader(const wchar_t* shaderPath);
 
 	// Refreshes ImGui 
 	void ResetUI(float deltaTime);
@@ -78,6 +78,8 @@ private:
 	void TransformStats();
 
 	void CameraStats();
+
+	void MaterialUI();
 
 	// Adds Graphic changing UI
 	void GraphicChangeUI();

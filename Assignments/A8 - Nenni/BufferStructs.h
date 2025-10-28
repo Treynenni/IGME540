@@ -18,4 +18,6 @@ struct PixelBufferData
 {
 	XMFLOAT4 colorTint;        // Overall tint
 	float time;
+	XMFLOAT2 uvScale;
+	XMFLOAT2 uvOffset;
 };

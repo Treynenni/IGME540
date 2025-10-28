@@ -5,7 +5,6 @@
 #include "PathHelpers.h"
 #include "Window.h"
 
-
 // This code assumes files are in "ImGui" subfolder!
 // Adjust as necessary for your own folder structure and project setup
 #include "ImGui/imgui.h"
@@ -19,12 +18,9 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #include <d3dcompiler.h>
 
-
-
 // For the DirectX Math library
 using namespace DirectX;
 using namespace std;
-
 
 
 // --------------------------------------------------------
@@ -41,7 +37,7 @@ Game::Game()
 
 	constPixBuffData.colorTint = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	cameras[0] = make_shared<Camera>(Camera(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -8.0f), XM_PI / 2.0f, 1.0f, 0.01f));
+	cameras[0] = make_shared<Camera>(Camera(Window::AspectRatio(), XMFLOAT3(0.0f, 1.0f, -8.0f), XM_PI / 2.0f, 1.0f, 0.01f));
 	cameras[1] = make_shared<Camera>(Camera(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -2.0f), XM_PI / 3.0f, 1.0f, 0.01f));
 	cameras[2] = make_shared<Camera>(Camera(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -3.0f), XM_PI / 4.0f, 1.0f, 0.01f));
 
@@ -146,28 +142,37 @@ void Game::LoadAssets()
 	Graphics::Device->CreateSamplerState(&sampDesc, sampler.GetAddressOf());
 
 	// Loading Textures
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockSRV;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> tilesSRV;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> crateSRV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalSRV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodSRV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rustSRV;
 
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../assets/rock.png").c_str(), 0, rockSRV.GetAddressOf());
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../assets/tiles.png").c_str(), 0, tilesSRV.GetAddressOf());
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../assets/crate.png").c_str(), 0, crateSRV.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../assets/metal.png").c_str(), 0, metalSRV.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../assets/wood.png").c_str(), 0, woodSRV.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../assets/rust.png").c_str(), 0, rustSRV.GetAddressOf());
 
 	// Loading Shaders
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> basicVS = LoadVertexShader(FixPath(L"VertexShader.cso").c_str());
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> basicPS = LoadPixelShader(FixPath(L"PixelShader.cso").c_str());
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> uvPS = LoadPixelShader(FixPath(L"UVsPixelShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> basicPS  = LoadPixelShader(FixPath(L"PixelShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> uvPS     = LoadPixelShader(FixPath(L"UVsPixelShader.cso").c_str());
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> normalPS = LoadPixelShader(FixPath(L"NormalPixelShader.cso").c_str());
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> customPS = LoadPixelShader(FixPath(L"CustomPixelShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> layerPS = LoadPixelShader(FixPath(L"LayerShader.cso").c_str());
 
 	// Creating Materials
-	materials[0] = make_shared<Material>(XMFLOAT4(1, 0, 0, 0), basicVS, basicPS);
-	materials[1] = make_shared<Material>(XMFLOAT4(0, 1, 0, 0), basicVS, basicPS);
-	materials[2] = make_shared<Material>(XMFLOAT4(0, 0, 1, 0), basicVS, basicPS);
-	materials[3] = make_shared<Material>(XMFLOAT4(0, 0, 0, 0), basicVS, uvPS);
-	materials[4] = make_shared<Material>(XMFLOAT4(0, 0, 0, 0), basicVS, normalPS);
-	materials[5] = make_shared<Material>(XMFLOAT4(1, 0, 0, 0), basicVS, customPS);
+	materials[0] = make_shared<Material>(XMFLOAT4(1, 1, 1, 1), basicVS, basicPS);
+	materials[1] = make_shared<Material>(XMFLOAT4(1, 1, 1, 1), basicVS, basicPS);
+	materials[2] = make_shared<Material>(XMFLOAT4(1, 1, 1, 1), basicVS, layerPS);
+
+	// Gives each material a sampler and srv
+	for (shared_ptr mat: materials)
+	{
+		mat->AddSampler(0, sampler);
+	}
+
+	materials[0]->AddTextureSRV(0, metalSRV);
+	materials[1]->AddTextureSRV(0, woodSRV);
+	materials[2]->AddTextureSRV(0, metalSRV);
+	materials[2]->AddTextureSRV(1, rustSRV);
 
 	// Loading Meshes
 	shapes[0] = make_shared<Mesh>(FixPath(L"../../assets/cube.obj").c_str());
@@ -186,11 +191,11 @@ void Game::CreateEntities()
 {
 	entities[0] = make_shared<Entity>(shapes[3], materials[0]);
 	entities[1] = make_shared<Entity>(shapes[4], materials[1]);
-	entities[2] = make_shared<Entity>(shapes[0], materials[2]);
-	entities[3] = make_shared<Entity>(shapes[1], materials[3]);
-	entities[4] = make_shared<Entity>(shapes[2], materials[4]);
-	entities[5] = make_shared<Entity>(shapes[5], materials[5]);
-	entities[6] = make_shared<Entity>(shapes[6], materials[5]);
+	entities[2] = make_shared<Entity>(shapes[2], materials[0]);
+	entities[3] = make_shared<Entity>(shapes[6], materials[1]);
+	entities[4] = make_shared<Entity>(shapes[0], materials[2]);
+	entities[5] = make_shared<Entity>(shapes[5], materials[2]);
+	entities[6] = make_shared<Entity>(shapes[1], materials[2]);
 
 	entities[0]->GetTransform()->MoveAbsolute(-9, 0, 0);
 	entities[1]->GetTransform()->MoveAbsolute(-6, 0, 0);
@@ -263,11 +268,15 @@ void Game::Draw(float deltaTime, float totalTime)
 
 		std::shared_ptr<Material> mat = ent->GetMaterial();
 
+		mat->BindTextureAndSampler();
+
 		constVertBuffData.world = ent->GetTransform()->GetWorldMatrix();
 
-		constPixBuffData.colorTint = ent->GetMaterial()->GetTint();
-
 		Graphics::FillAndBindNextConstantBuffer(&constVertBuffData, sizeof(VertexBufferData), D3D11_VERTEX_SHADER, 0);
+
+		constPixBuffData.colorTint = mat->GetTint();
+		constPixBuffData.uvScale = mat->GetUVScale();
+		constPixBuffData.uvOffset = mat->GetUVOffset();
 
 		Graphics::FillAndBindNextConstantBuffer(&constPixBuffData, sizeof(PixelBufferData), D3D11_PIXEL_SHADER, 0);
 
@@ -377,9 +386,11 @@ void Game::ShowUIWindow() {
 	}
 	*/
 
-	ShowStats();
+	MaterialUI();
 
-	TransformStats();
+	// ShowStats(); **Broken
+
+	// TransformStats(); **Broken
 
 	CameraStats();
 
@@ -497,6 +508,46 @@ void Game::CameraStats()
 			camera = cameras[2];
 			currentCam = 3;
 		}
+		ImGui::TreePop();
+	}
+}
+
+void Game::MaterialUI() 
+{
+	XMFLOAT4& metalTint = materials[0]->GetTint();
+	XMFLOAT4& woodTint  = materials[1]->GetTint();
+	XMFLOAT4& rustTint  = materials[2]->GetTint();
+
+	if (ImGui::TreeNode("Materials"))
+	{
+		if (ImGui::TreeNode("Metal")) {
+
+			ImGui::Image(materials[0]->GetTexture(0).Get(), ImVec2(256, 256));
+
+			ImGui::ColorEdit4("Metal Color", &metalTint.x);
+
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("Wood")) {
+
+			ImGui::Image(materials[1]->GetTexture(0).Get(), ImVec2(256, 256));
+
+			ImGui::ColorEdit4("Wood Color", &woodTint.x);
+
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("Rusted Metal")) {
+
+			ImGui::Image(materials[2]->GetTexture(0).Get(), ImVec2(256, 256));
+			ImGui::Image(materials[2]->GetTexture(1).Get(), ImVec2(256, 256));
+
+			ImGui::ColorEdit4("Rusted Color", &rustTint.x);
+
+			ImGui::TreePop();
+		}
+
 		ImGui::TreePop();
 	}
 }

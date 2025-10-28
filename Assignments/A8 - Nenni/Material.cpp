@@ -6,6 +6,9 @@ Material::Material(XMFLOAT4 inTint, Microsoft::WRL::ComPtr<ID3D11VertexShader> i
 	SetTint(inTint);
 	SetVertexShader(inVertexShader);
 	SetPixelShader(inPixelShader);
+
+	uvScale = { 1, 1 };
+	uvOffset = { 0, 0 };
 }
 
 void Material::SetTint(XMFLOAT4 inTint)
@@ -23,7 +26,17 @@ void Material::SetPixelShader(Microsoft::WRL::ComPtr<ID3D11PixelShader> inPixelS
 	pixelShader = inPixelShader;
 }
 
-XMFLOAT4 Material::GetTint()
+void Material::SetUVScale(XMFLOAT2 scale)
+{
+	uvScale = scale;
+}
+
+void Material::SetUVOffset(XMFLOAT2 offset)
+{
+	uvOffset = offset;
+}
+
+XMFLOAT4& Material::GetTint()
 {
 	return tint;
 }
@@ -36,6 +49,27 @@ Microsoft::WRL::ComPtr<ID3D11VertexShader> Material::GetVertexShader()
 Microsoft::WRL::ComPtr<ID3D11PixelShader> Material::GetPixelShader()
 {
 	return pixelShader;
+}
+
+XMFLOAT2 Material::GetUVScale()
+{
+	return uvScale;
+}
+
+XMFLOAT2 Material::GetUVOffset()
+{
+	return uvOffset;
+}
+
+Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Material::GetTexture(unsigned int index)
+{
+	auto it = textureSRVs.find(index);
+
+	if (it == textureSRVs.end()) {
+		return 0;
+	}
+
+	return it->second;
 }
 
 void Material::AddTextureSRV(unsigned int index, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv)
