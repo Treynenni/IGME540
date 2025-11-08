@@ -159,11 +159,14 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="General.hlsli">
       <Filter>Shaders</Filter>
     </None>
     <None Include="Pixel.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="packages.config" />
+    <None Include="Lights.hlsli">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

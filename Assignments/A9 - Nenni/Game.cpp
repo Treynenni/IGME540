@@ -49,6 +49,8 @@ Game::Game()
 
 	Graphics::ResizeConstantBufferHeap(256 * 1000);
 
+	directionalLight1 = {};
+
 	directionalLight1.Type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight1.Direction = XMFLOAT3(1, 0, 0);
 	directionalLight1.Color = XMFLOAT3(1, 0, 0);

@@ -1,6 +1,11 @@
 #ifndef __GGP_PIXELSHADER_INCLUDES__ // Each .hlsli file needs a unique identifier!
 #define __GGP_PIXELSHADER_INCLUDES__
 
+#define MAX_SPECULAR_EXPONENT 256.0f
+
+#include "General.hlsli"
+#include "Light.hlsli"
+
 cbuffer ExternalData : register(b0)
 {
     float4 color;
@@ -10,6 +15,7 @@ cbuffer ExternalData : register(b0)
     float roughness;
     float3 ambientColor;
     float time;
+    Light dirLight1;
 }
 
 #endif

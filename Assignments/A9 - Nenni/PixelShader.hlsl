@@ -1,5 +1,8 @@
-#include "General.hlsli"
 #include "Pixel.hlsli"
+
+#define LIGHT_TYPE_DIRECTIONAL 0
+#define LIGHT_TYPE_POINT 1
+#define LIGHT_TYPE_SPOT 2
 
 // Texture Resources
 Texture2D SurfaceTexture    : register(t0);
@@ -23,8 +26,10 @@ float4 main(VertexToPixel input) : SV_TARGET
     float4 textureColor = SurfaceTexture.Sample(BasicSampler, input.uv).rgba;
     float4 surfaceColor = float4(ambientColor.xyz, 0) * textureColor * color;
     
-    //return float4(surfaceColor);
+    return float4(surfaceColor);
     
-    return float4(input.normal, 1);
+    //return float4(input.normal, 1);
     
+    //return float4(dirLight1.Color, 1);
+
 }
