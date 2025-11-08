@@ -12,10 +12,13 @@ struct Light
 {
 	int Type;
 	XMFLOAT3 Direction;
+
 	float Range;
 	XMFLOAT3 Position;
+
 	float Intensity;
 	XMFLOAT3 Color;
+
 	float SpotInnerAngle;
 	float SpotOuterAngle;
 	XMFLOAT2 Padding;

@@ -1,9 +1,5 @@
 #include "Pixel.hlsli"
 
-#define LIGHT_TYPE_DIRECTIONAL 0
-#define LIGHT_TYPE_POINT 1
-#define LIGHT_TYPE_SPOT 2
-
 // Texture Resources
 Texture2D SurfaceTexture    : register(t0);
 
@@ -23,10 +19,32 @@ float4 main(VertexToPixel input) : SV_TARGET
     input.uv = input.uv * uvScale + uvOffset;
     input.normal = normalize(input.normal);
     
-    float4 textureColor = SurfaceTexture.Sample(BasicSampler, input.uv).rgba;
-    float4 surfaceColor = float4(ambientColor.xyz, 0) * textureColor * color;
+    float3 surfaceColor = SurfaceTexture.Sample(BasicSampler, input.uv).rgb * color.rgb;
+    float3 totalLight = ambientColor * surfaceColor;
     
-    return float4(surfaceColor);
+    for (int i = 0; i < 5; i++)
+    {
+        Light light = lights[i];
+        light.Direction = normalize(light.Direction);
+        
+        switch (light.Type)
+        { 
+            case LIGHT_TYPE_DIRECTIONAL:
+                totalLight += DirectionalLight(light, input.normal, input.worldPosition, camPosition, roughness, surfaceColor);
+                break;
+            
+            case LIGHT_TYPE_POINT:
+                totalLight += PointLight(light, input.normal,  input.worldPosition, camPosition, roughness, surfaceColor);
+                break;
+            
+            case LIGHT_TYPE_SPOT:
+                totalLight += SpotLight(light, input.normal, input.worldPosition, camPosition, roughness, surfaceColor);
+                break;
+            
+        }
+    }   
+    
+    return float4(totalLight, 1.0);
     
     //return float4(input.normal, 1);
     

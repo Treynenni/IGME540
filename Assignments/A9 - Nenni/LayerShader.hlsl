@@ -1,6 +1,4 @@
-#include "General.hlsli"
 #include "Pixel.hlsli"
-
 // Texture Resources
 Texture2D Texture1 : register(t0);
 Texture2D Texture2 : register(t1);

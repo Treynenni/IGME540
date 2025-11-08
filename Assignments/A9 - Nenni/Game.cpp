@@ -49,13 +49,6 @@ Game::Game()
 
 	Graphics::ResizeConstantBufferHeap(256 * 1000);
 
-	directionalLight1 = {};
-
-	directionalLight1.Type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight1.Direction = XMFLOAT3(1, 0, 0);
-	directionalLight1.Color = XMFLOAT3(1, 0, 0);
-	directionalLight1.Intensity = 1.0;
-
 	D3D11_INPUT_ELEMENT_DESC inputElements[3] = {};
 
 	// Set up the first element - a position, which is 3 float values
@@ -168,9 +161,9 @@ void Game::LoadAssets()
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> layerPS = LoadPixelShader(FixPath(L"LayerShader.cso").c_str());
 
 	// Creating Materials
-	materials[0] = make_shared<Material>(XMFLOAT4(1, 1, 1, 1), basicVS, basicPS, 0);
-	materials[1] = make_shared<Material>(XMFLOAT4(1, 1, 1, 1), basicVS, basicPS, 0.7);
-	materials[2] = make_shared<Material>(XMFLOAT4(1, 1, 1, 1), basicVS, layerPS, 1);
+	materials[0] = make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), basicVS, basicPS, 0.2f);
+	materials[1] = make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), basicVS, basicPS, 0.8f);
+	materials[2] = make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), basicVS, layerPS, 1.0f);
 
 	// Gives each material a sampler and srv
 	for (shared_ptr mat: materials)
@@ -191,6 +184,41 @@ void Game::LoadAssets()
 	shapes[4] = make_shared<Mesh>(FixPath(L"../../assets/quad_double_sided.obj").c_str());
 	shapes[5] = make_shared<Mesh>(FixPath(L"../../assets/sphere.obj").c_str());
 	shapes[6] = make_shared<Mesh>(FixPath(L"../../assets/torus.obj").c_str());
+
+	//Create Lights
+	for (int i = 0; i < 5; i++) {
+		lights[i] = {};
+	}
+
+	lights[0].Type = LIGHT_TYPE_DIRECTIONAL;
+	lights[0].Direction = XMFLOAT3(1, 0, 0);
+	lights[0].Color = XMFLOAT3(1, 0, 0);
+	lights[0].Intensity = 1.0f;
+
+	lights[1].Type = LIGHT_TYPE_DIRECTIONAL;
+	lights[1].Direction = XMFLOAT3(-1, 0, 0);
+	lights[1].Color = XMFLOAT3(0, 0, 1);
+	lights[1].Intensity = 1.0f;
+
+	lights[2].Type = LIGHT_TYPE_DIRECTIONAL;
+	lights[2].Direction = XMFLOAT3(0, -1, 0);
+	lights[2].Color = XMFLOAT3(0, 1, 0);
+	lights[2].Intensity = 1.0f;
+
+	lights[3].Type = LIGHT_TYPE_POINT;
+	lights[3].Color = XMFLOAT3(0.9f, 0.9f, 0.9f);
+	lights[3].Intensity = 1.0f;
+	lights[3].Position = XMFLOAT3(-5.0f, 5.0f, 0);
+	lights[3].Range = 20;
+
+	lights[4].Type = LIGHT_TYPE_SPOT;
+	lights[4].Direction = XMFLOAT3(0, -1, 0);
+	lights[4].Color = XMFLOAT3(0.9f, 0.9f, 0.9f);
+	lights[4].Intensity = 3.0f;
+	lights[4].Position = XMFLOAT3(-9.0f, 2.0f, 0);
+	lights[4].Range = 10.0f;
+	lights[4].SpotInnerAngle = XMConvertToRadians(10.0f);
+	lights[4].SpotOuterAngle = XMConvertToRadians(25.0f);
 }
 
 // --------------------------------------------------------
@@ -202,9 +230,9 @@ void Game::CreateEntities()
 	entities[1] = make_shared<Entity>(shapes[4], materials[1]);
 	entities[2] = make_shared<Entity>(shapes[2], materials[0]);
 	entities[3] = make_shared<Entity>(shapes[6], materials[1]);
-	entities[4] = make_shared<Entity>(shapes[0], materials[2]);
-	entities[5] = make_shared<Entity>(shapes[5], materials[2]);
-	entities[6] = make_shared<Entity>(shapes[1], materials[2]);
+	entities[4] = make_shared<Entity>(shapes[0], materials[1]);
+	entities[5] = make_shared<Entity>(shapes[5], materials[0]);
+	entities[6] = make_shared<Entity>(shapes[1], materials[1]);
 
 	entities[0]->GetTransform()->MoveAbsolute(-9, 0, 0);
 	entities[1]->GetTransform()->MoveAbsolute(-6, 0, 0);
@@ -267,7 +295,10 @@ void Game::Draw(float deltaTime, float totalTime)
 	constVertBuffData.view = camera->GetViewMatrix();
 
 	constPixBuffData.time = totalTime;
-	memcpy(&constPixBuffData.dirLight1, &directionalLight1, sizeof(Light));
+	
+	constPixBuffData.camPosition = cameras[currentCam - 1]->GetTransform()->GetPosition();
+	memcpy(&constPixBuffData.lights, &lights[0], sizeof(lights));
+
 
 	// Draws each entity
 	// - Binds constant buffer
@@ -406,6 +437,8 @@ void Game::ShowUIWindow() {
 	// TransformStats(); **Broken
 
 	CameraStats();
+
+	LightUI();
 
 	ImGui::End(); // Ends the current window
 }
@@ -557,6 +590,62 @@ void Game::MaterialUI()
 			ImGui::Image(materials[2]->GetTexture(1).Get(), ImVec2(256, 256));
 
 			ImGui::ColorEdit4("Rusted Color", &rustTint.x);
+
+			ImGui::TreePop();
+		}
+
+		ImGui::TreePop();
+	}
+}
+
+void Game::LightUI() 
+{
+	if (ImGui::TreeNode("Lighting"))
+	{
+		ImGui::ColorEdit3("Ambient Lighting", &ambientColor.x);
+		
+
+		if (ImGui::TreeNode("Directional Light 1")) {
+
+			ImGui::DragFloat("Light 1 Intensity", &lights[0].Intensity, 0.0f, 0.0f, 10.0f);
+
+			ImGui::ColorEdit4("Light 1 Color", &lights[0].Color.x);
+
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("Directional Light 2")) {
+
+			ImGui::DragFloat("Light 2 Intensity", &lights[1].Intensity, 0.0f, 0.0f, 10.0f);
+
+			ImGui::ColorEdit4("Light 2 Color", &lights[1].Color.x);
+
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("Directional Light 3")) {
+
+			ImGui::DragFloat("Light 3 Intensity", &lights[2].Intensity, 0.0f, 0.0f, 10.0f);
+
+			ImGui::ColorEdit4("Light 3 Color", &lights[2].Color.x);
+
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("Point Light")) {
+
+			ImGui::DragFloat("Light 4 Intensity", &lights[3].Intensity, 0.0f, 0.0f, 10.0f);
+
+			ImGui::ColorEdit4("Light 4 Color", &lights[3].Color.x);
+
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("Spot Light")) {
+
+			ImGui::DragFloat("Light 5 Intensity", &lights[4].Intensity, 0.0f, 0.0f, 10.0f);
+
+			ImGui::ColorEdit4("Light 5 Color", &lights[4].Color.x);
 
 			ImGui::TreePop();
 		}

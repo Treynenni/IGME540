@@ -19,12 +19,15 @@ struct VertexBufferData
 struct PixelBufferData 
 {
 	XMFLOAT4 colorTint;        // Overall tint
+
 	XMFLOAT2 uvScale;
 	XMFLOAT2 uvOffset;
+
 	XMFLOAT3 camPosition;
 	float roughness;
+
 	XMFLOAT3 ambientColor;
 	float time;
-	Light dirLight1;
 
+	Light lights[5];
 };

@@ -53,7 +53,7 @@ private:
 
 	XMFLOAT3 ambientColor;
 
-	Light directionalLight1;
+	Light lights[5];
 
 	VertexBufferData constVertBuffData;
 
@@ -85,6 +85,8 @@ private:
 	void CameraStats();
 
 	void MaterialUI();
+
+	void LightUI();
 
 	// Adds Graphic changing UI
 	void GraphicChangeUI();
