@@ -20,4 +20,28 @@ struct VertexToPixel
     float3 tangent          : TANGENT;
 };
 
+struct VertexToPixel_Sky
+{
+    // Data type
+	//  |
+	//  |   Name          Semantic
+	//  |    |                |
+	//  v    v                v
+    float4 screenPosition	: SV_POSITION;
+    float3 sampleDir		: DIRECTION;
+};
+
+struct VertexShaderInput
+{
+	// Data type
+	//  |
+	//  |   Name          Semantic
+	//  |    |                |
+	//  v    v                v
+    float3 localPosition	: POSITION; // XYZ position
+    float2 uv				: TEXCOORD;
+    float3 normal			: NORMAL;
+    float3 tangent			: TANGENT;
+};
+
 #endif

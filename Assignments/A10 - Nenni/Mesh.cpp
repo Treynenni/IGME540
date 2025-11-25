@@ -432,3 +432,15 @@ void Mesh::CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices,
 		XMStoreFloat3(&verts[i].Tangent, tangent);
 	}
 }
+
+void Mesh::SetBuffersAndDraw()
+{
+	// Set buffers in the input assembler
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	Graphics::Context->IASetVertexBuffers(0, 1, vertexBuffer.GetAddressOf(), &stride, &offset);
+	Graphics::Context->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+
+	// Draw this mesh
+	Graphics::Context->DrawIndexed(this->indexCount, 0, 0);
+}

@@ -10,6 +10,7 @@
 #include "Camera.h"
 #include "Material.h"
 #include "Lights.h"
+#include "Sky.h"
 
 using namespace std;
 
@@ -65,6 +66,8 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> LoadVertexShader(const wchar_t* shaderPath);
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> LoadPixelShader(const wchar_t* shaderPath);
+
+	shared_ptr<Sky> sky;
 
 	// Helper Methods
 

@@ -27,6 +27,8 @@ public:
 
 	void CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices, int numIndices);
 
+	void SetBuffersAndDraw();
+
 	void Draw();
 
 

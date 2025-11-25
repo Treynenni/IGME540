@@ -45,7 +45,7 @@ Game::Game()
 
 	currentCam = 1;
 
-	ambientColor = XMFLOAT3(0.1f, 0.1f, 0.25f);
+	ambientColor = XMFLOAT3(0.78f, 0.52f, 0.77f);
 
 	Graphics::ResizeConstantBufferHeap(256 * 1000);
 
@@ -167,12 +167,14 @@ void Game::LoadAssets()
 	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../assets/rock_normals.png").c_str(), 0, rockNormalSRV.GetAddressOf());
 
 	// Loading Shaders
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> basicVS = LoadVertexShader(FixPath(L"VertexShader.cso").c_str());
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> basicPS  = LoadPixelShader(FixPath(L"PixelShader.cso").c_str());
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> uvPS     = LoadPixelShader(FixPath(L"UVsPixelShader.cso").c_str());
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> normalPS = LoadPixelShader(FixPath(L"NormalPixelShader.cso").c_str());
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> customPS = LoadPixelShader(FixPath(L"CustomPixelShader.cso").c_str());
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> layerPS = LoadPixelShader(FixPath(L"LayerShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> basicVS	= LoadVertexShader(FixPath(L"VertexShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> skyVS	= LoadVertexShader(FixPath(L"SkyVS.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> basicPS	= LoadPixelShader(FixPath(L"PixelShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> uvPS		= LoadPixelShader(FixPath(L"UVsPixelShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> normalPS	= LoadPixelShader(FixPath(L"NormalPixelShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> customPS	= LoadPixelShader(FixPath(L"CustomPixelShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> layerPS	= LoadPixelShader(FixPath(L"LayerShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> skyPS		= LoadPixelShader(FixPath(L"SkyPS.cso").c_str());
 
 	// Creating Materials
 	materials[0] = make_shared<Material>(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), basicVS, basicPS, 0.2f);
@@ -200,6 +202,16 @@ void Game::LoadAssets()
 	shapes[4] = make_shared<Mesh>(FixPath(L"../../assets/quad_double_sided.obj").c_str());
 	shapes[5] = make_shared<Mesh>(FixPath(L"../../assets/sphere.obj").c_str());
 	shapes[6] = make_shared<Mesh>(FixPath(L"../../assets/torus.obj").c_str());
+
+	// Creates skybox
+	sky = make_shared<Sky>(
+		FixPath(L"../../assets/right.png").c_str(),
+		FixPath(L"../../assets/left.png").c_str(),
+		FixPath(L"../../assets/up.png").c_str(),
+		FixPath(L"../../assets/down.png").c_str(),
+		FixPath(L"../../assets/front.png").c_str(),
+		FixPath(L"../../assets/back.png").c_str(),
+		shapes[0], skyVS, skyPS, sampler);
 
 	//Create Lights
 	for (int i = 0; i < 5; i++) {
@@ -235,6 +247,8 @@ void Game::LoadAssets()
 	lights[4].Range = 10.0f;
 	lights[4].SpotInnerAngle = XMConvertToRadians(10.0f);
 	lights[4].SpotOuterAngle = XMConvertToRadians(25.0f);
+
+	
 }
 
 // --------------------------------------------------------
@@ -342,6 +356,8 @@ void Game::Draw(float deltaTime, float totalTime)
 
 		ent->Draw();
 	}
+
+	sky->Draw(camera);
 
 	ImGui::Render(); // Turns this frame’s UI into renderable triangles
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
