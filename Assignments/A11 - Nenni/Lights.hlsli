@@ -112,17 +112,17 @@ float SchlickGGX(float3 n, float3 v, float roughness)
 // G() - Geometric Shadowing - Schlick-GGX
 float3 MicrofacetBRDF(float3 n, float3 l, float3 v, float roughness, float3 f0, out float3 F_out)
 {
-    float3 h = normalize(v + 1);
+    float3 h = normalize(v + l);
     
     float D = GGX(n, h, roughness);
     float3 F = Schlick(v, h, f0);
-    float G = SchlickGGX(n, v, roughness) * SchlickGGX(n, 1, roughness);
+    float G = SchlickGGX(n, v, roughness) * SchlickGGX(n, l, roughness);
     
     F_out = F;
     
     float3 specularResult = (D * F * G) / 4;
     
-    return specularResult * max(dot(n, 1), 0);
+    return specularResult * max(dot(n, l), 0);
 }
 
 float3 DiffuseEnergyConserve(float3 diffuse, float3 specular, float metalness)
@@ -138,7 +138,7 @@ float3 DirectionalLight(Light light, float3 normal, float3 worldPos, float3 camP
     float3 F;
     
     float diffusion = Diffuse(normal, lightDirection);
-    float specular = MicrofacetBRDF(normal, lightDirection, camDirection, roughness, specularColor, F);
+    float3 specular = MicrofacetBRDF(normal, lightDirection, camDirection, roughness, specularColor, F);
     
     float3 balanceDiff = DiffuseEnergyConserve(diffusion, F, metalness);
 
@@ -153,7 +153,7 @@ float3 PointLight(Light light, float3 normal, float3 worldPos, float3 camPos, fl
     float3 F;
     
     float diffusion = Diffuse(normal, lightDirection);
-    float specular = MicrofacetBRDF(normal, lightDirection, camDirection, roughness, specularColor, F);
+    float3 specular = MicrofacetBRDF(normal, lightDirection, camDirection, roughness, specularColor, F);
     float attenuate = Attenuate(light, worldPos);
     
     float3 balanceDiff = DiffuseEnergyConserve(diffusion, F, metalness);
@@ -175,7 +175,7 @@ float3 SpotLight(Light light, float3 normal, float3 worldPos, float3 camPos, flo
     float spotTerm = saturate((angle - outer) / (inner - outer));
 
     float diffusion = Diffuse(normal, lightDirection);
-    float specular = MicrofacetBRDF(normal, lightDirection, camDirection, roughness, specularColor, F);
+    float3 specular = MicrofacetBRDF(normal, lightDirection, camDirection, roughness, specularColor, F);
     float attenuation = Attenuate(light, worldPos);
     
     float3 balanceDiff = DiffuseEnergyConserve(diffusion, F, metalness);

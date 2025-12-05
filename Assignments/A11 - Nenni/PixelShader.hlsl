@@ -43,7 +43,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 specularColor = lerp(0.04f, surfaceColor.rgb, metal);
     
     // Ambient lighting
-    float3 totalLight = surfaceColor;
+    float3 totalLight = 0;
     
     // Additional lighting
     for (int i = 0; i < 5; i++)
